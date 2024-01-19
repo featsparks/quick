@@ -1,0 +1,3054 @@
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  #push:
+
+jobs:
+  ci:
+    runs-on: ubuntu-22.04
+    container: ${{ matrix.container }}
+
+    timeout-minutes: 90
+
+    strategy:
+      fail-fast: false
+      matrix:
+        tree:
+          # `rust-next`.
+          # ojeda/rust-next
+          - rust-next
+
+          # `rust-fixes`.
+          # ojeda/rust-fixes
+          - rust-fixes
+
+          # 7.1 Next.
+          - next
+
+          # 7.0 Mainline.
+          - torvalds
+
+          # 6.19 Stable.
+          #- stable-rc/queue/6.19
+          - stable-rc/linux-6.19.y
+          # stable/linux-6.19.y
+
+          # 6.18 LTS.
+          #- stable-rc/queue/6.18
+          - stable-rc/linux-6.18.y
+          # stable/linux-6.18.y
+
+          # 6.12 LTS.
+          #- stable-rc/queue/6.12
+          - stable-rc/linux-6.12.y
+          # stable/linux-6.12.y
+
+          # 6.6 LTS.
+          # stable-rc/queue/6.6
+          - stable-rc/linux-6.6.y
+          # stable/linux-6.6.y
+
+          # 6.1 LTS -- done below separately.
+          # stable-rc/queue/6.1
+          # stable-rc/linux-6.1.y
+          # stable/linux-6.1.y
+
+        arch:
+          - x86_64
+          - loongarch64
+          - arm64
+          - riscv64
+          - arm
+          - um
+          # riscv32
+
+        toolchain:
+          # From the current distribution, i.e. using the relevant package manager.
+          #
+          # TODO: `llvm-distro` is the same, but we use that for non-Ubuntu because we have to update the check of `CC_VERSION_TEXT` below for those distributions first.
+          - llvm
+
+          # gcc
+
+          # From LLVM apt (https://apt.llvm.org).
+          # llvm-15-llvm-apt
+          # llvm-16-llvm-apt
+          # llvm-17-llvm-apt
+          # llvm-18-llvm-apt
+          # llvm-19-llvm-apt
+          # llvm-20-llvm-apt
+          # llvm-21-llvm-apt
+
+          # From kernel.org (https://mirrors.edge.kernel.org/pub/tools/llvm/).
+          # llvm-15-kernel
+          # llvm-16-kernel
+          # llvm-17-kernel
+          # llvm-18-kernel
+          # llvm-19-kernel
+          # llvm-20-kernel
+          # llvm-21-kernel
+
+          # From kernel.org, LLVM+Rust combined toolchains, matching LLVMs (https://mirrors.edge.kernel.org/pub/tools/llvm/rust/).
+          # llvmcombined-14-rust-1620-kernel        (6.1  LTS)
+          # llvmcombined-17-rust-1730-kernel        (6.6  LTS)
+          # llvmcombined-21-rust-1931-kernel        (6.12 LTS)
+          # llvmcombined-21-rust-1931-kernel        (6.18 LTS)
+          # llvmcombined-21-rust-1931-kernel        (6.19 Stable)
+          # llvmcombined-21-rust-1931-kernel        (7.0  Mainline)
+          # llvmcombined-21-rust-1931-kernel        (7.1  Next)
+
+          # From kernel.org, LLVM+Rust combined toolchains, latest LLVMs within the same major (https://mirrors.edge.kernel.org/pub/tools/llvm/rust/).
+          # llvmcombined-14latest-rust-1620-kernel  (6.1  LTS)
+          # llvmcombined-17latest-rust-1730-kernel  (6.6  LTS)
+          # llvmcombined-22latest-rust-1931-kernel  (6.12 LTS)
+          # llvmcombined-22latest-rust-1931-kernel  (6.18 LTS)
+          # llvmcombined-22latest-rust-1931-kernel  (6.19 Stable)
+          # llvmcombined-22latest-rust-1931-kernel  (7.0  Mainline)
+          # llvmcombined-22latest-rust-1931-kernel  (7.1  Next)
+
+          # rustc_codegen_gcc
+
+          # TODO: mixed GCC+LLVM builds.
+
+        config:
+          - defconfig
+          - defconfig+debug
+
+        output:
+          - src
+          # subdir
+          # outside
+
+        rust:
+          # `rustup` means "download from `rustup` the version in `scripts/min-script-version.sh`",
+          # i.e. by default we test the minimum version supported by the kernel.
+          #
+          # `rustup-stable` tests, instead, the latest stable Rust version released. In other words,
+          # the other end of the window of stable releases we support.
+          - rustup
+          # rustup-1.78.0
+          # rustup-1.79.0
+          # rustup-1.80.0
+          # rustup-1.80.1
+          # rustup-1.81.0
+          # rustup-1.82.0
+          # rustup-1.83.0
+          # rustup-1.84.0
+          # rustup-1.84.1
+          # rustup-1.85.0
+          # rustup-1.85.1
+          # rustup-1.86.0
+          # rustup-1.87.0
+          # rustup-1.88.0
+          # rustup-1.89.0
+          # rustup-1.90.0
+          # rustup-1.91.0
+          # rustup-1.91.1
+          # rustup-1.92.0
+          # rustup-1.93.0
+          # rustup-1.93.1
+          - rustup-stable
+          # rustup-beta
+          # rustup-nightly
+
+          # `distro` uses the one from the current distribution, i.e. using
+          # the relevant package manager.
+          # distro
+
+          # From kernel.org, LLVM+Rust combined toolchains, matching LLVMs (https://mirrors.edge.kernel.org/pub/tools/llvm/rust/).
+          # llvmcombined-14-rust-1620-kernel        (6.1  LTS)
+          # llvmcombined-17-rust-1730-kernel        (6.6  LTS)
+          # llvmcombined-21-rust-1931-kernel        (6.12 LTS)
+          # llvmcombined-21-rust-1931-kernel        (6.18 LTS)
+          # llvmcombined-21-rust-1931-kernel        (6.19 Stable)
+          # llvmcombined-21-rust-1931-kernel        (7.0  Mainline)
+          # llvmcombined-21-rust-1931-kernel        (7.1  Next)
+
+          # From kernel.org, LLVM+Rust combined toolchains, latest LLVMs within the same major (https://mirrors.edge.kernel.org/pub/tools/llvm/rust/).
+          # llvmcombined-14latest-rust-1620-kernel  (6.1  LTS)
+          # llvmcombined-17latest-rust-1730-kernel  (6.6  LTS)
+          # llvmcombined-22latest-rust-1931-kernel  (6.12 LTS)
+          # llvmcombined-22latest-rust-1931-kernel  (6.18 LTS)
+          # llvmcombined-22latest-rust-1931-kernel  (6.19 Stable)
+          # llvmcombined-22latest-rust-1931-kernel  (7.0  Mainline)
+          # llvmcombined-22latest-rust-1931-kernel  (7.1  Next)
+
+          # disabled
+
+        bindgen:
+          # `cargo` means "`cargo install` the version in `scripts/min-script-version.sh`",
+          # i.e. by default we test the minimum version supported by the kernel.
+          #
+          # `cargo-latest` tests, instead, the latest stable `bindgen` version released.
+          - cargo
+          # cargo-latest
+
+          # `distro` uses the one from the current distribution, i.e. using
+          # the relevant package manager.
+          # distro
+
+        container:
+          - ghcr.io/featsparks/quickc
+          # archlinux
+          # debian:trixie # Stable
+          # debian:testing
+          # debian:sid
+          # fedora # Latest release.
+          # fedora:40 # A particular release.
+          # fedora:41
+          # fedora:42
+          # gentoo/stage3
+          # nixos/nix # TODO
+          # opensuse/slowroll # TODO: no docker image yet?
+          # opensuse/tumbleweed
+          # ubuntu # Always points to the latest LTS.
+          # ubuntu:rolling # Always points to the latest release, whether LTS or not.
+          # ubuntu:20.04 # LTS release: focal. A particular release -- this is what we currently test, for all releases, since there are not that many and they do not change often anyway.
+          # ubuntu:22.04 # LTS release: jammy.
+          # ubuntu:24.04 # LTS release: noble.
+          # ubuntu:25.04 # Non-LTS ("interim") release: plucky.
+          # ubuntu:25.10 # Non-LTS ("interim") release: ?
+          # ubuntu:26.04 # LTS release: ?
+
+        include:
+          # # `tree: ojeda/rust-next`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next`, `rust: rustup-stable`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig
+          #   output: src
+          #   rust: rustup-stable
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next`, `rust: rustup-beta`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig
+          #   output: src
+          #   rust: rustup-beta
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next`, `rust: rustup-nightly`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig
+          #   output: src
+          #   rust: rustup-nightly
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next`, `config: defconfig+debug`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next`, `config: defconfig+debug`, `rust: rustup-stable`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-stable
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next`, `config: defconfig+debug`, `rust: rustup-beta`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-beta
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next`, `config: defconfig+debug`, `rust: rustup-nightly`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-nightly
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next`, `arch: riscv64`.
+          # - tree: ojeda/rust-next
+          #   arch: riscv64
+          #   toolchain: llvm
+          #   config: defconfig
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next`, `arch: riscv64`, `rust: rustup-stable`.
+          # - tree: ojeda/rust-next
+          #   arch: riscv64
+          #   toolchain: llvm
+          #   config: defconfig
+          #   output: src
+          #   rust: rustup-stable
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next`, `config: defconfig+debug`, `arch: riscv64`.
+          # - tree: ojeda/rust-next
+          #   arch: riscv64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next`, `config: defconfig+debug`, `arch: riscv64`, `rust: rustup-stable`.
+          # - tree: ojeda/rust-next
+          #   arch: riscv64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-stable
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next`, `arch: arm64`.
+          # - tree: ojeda/rust-next
+          #   arch: arm64
+          #   toolchain: llvm
+          #   config: defconfig
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next`, `arch: arm64`, `rust: rustup-stable`.
+          # - tree: ojeda/rust-next
+          #   arch: arm64
+          #   toolchain: llvm
+          #   config: defconfig
+          #   output: src
+          #   rust: rustup-stable
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next`, `config: defconfig+debug`, `arch: arm64`.
+          # - tree: ojeda/rust-next
+          #   arch: arm64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next`, `config: defconfig+debug`, `arch: arm64`, `rust: rustup-stable`.
+          # - tree: ojeda/rust-next
+          #   arch: arm64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-stable
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next`, `arch: loongarch64`.
+          # - tree: ojeda/rust-next
+          #   arch: loongarch64
+          #   toolchain: llvm
+          #   config: defconfig
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next`, `arch: loongarch64`, `rust: rustup-stable`.
+          # - tree: ojeda/rust-next
+          #   arch: loongarch64
+          #   toolchain: llvm
+          #   config: defconfig
+          #   output: src
+          #   rust: rustup-stable
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next`, `config: defconfig+debug`, `arch: loongarch64`.
+          # - tree: ojeda/rust-next
+          #   arch: loongarch64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next`, `config: defconfig+debug`, `arch: loongarch64`, `rust: rustup-stable`.
+          # - tree: ojeda/rust-next
+          #   arch: loongarch64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-stable
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next`, `output: subdir`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: subdir
+          #   rust: rustup
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next`, `output: outside`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: outside
+          #   rust: rustup
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next, rust: disabled`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig
+          #   output: src
+          #   rust: disabled
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next, rust: rustup-1.78.0`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-1.78.0
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next, rust: rustup-1.79.0`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-1.79.0
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next, rust: rustup-1.80.1`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-1.80.1
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next, rust: rustup-1.81.0`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-1.81.0
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next, rust: rustup-1.82.0`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-1.82.0
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next, rust: rustup-1.83.0`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-1.83.0
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next, rust: rustup-1.84.1`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-1.84.1
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next, rust: rustup-1.85.1`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-1.85.1
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next, rust: rustup-1.86.0`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-1.86.0
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next, rust: rustup-1.87.0`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-1.87.0
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next, rust: rustup-1.88.0`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-1.88.0
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next, rust: rustup-1.89.0`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-1.89.0
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next, rust: rustup-1.90.0`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-1.90.0
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next, rust: rustup-1.91.1`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-1.91.1
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next, rust: rustup-1.92.0`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-1.92.0
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next, rust: rustup-1.93.1`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-1.93.1
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next, rust: rustup-beta`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-beta
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next, rust: rustup-nightly`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: llvm
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup-nightly
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `tree: ojeda/rust-next, toolchain: gcc`.
+          # - tree: ojeda/rust-next
+          #   arch: x86_64
+          #   toolchain: gcc
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `toolchain: llvm-15-llvm-apt`.
+          # - tree: rust-next
+          #   arch: x86_64
+          #   toolchain: llvm-15-llvm-apt
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `toolchain: llvm-16-llvm-apt`.
+          # - tree: rust-next
+          #   arch: x86_64
+          #   toolchain: llvm-16-llvm-apt
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `toolchain: llvm-17-llvm-apt`.
+          # - tree: rust-next
+          #   arch: x86_64
+          #   toolchain: llvm-17-llvm-apt
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `toolchain: llvm-18-llvm-apt`.
+          # - tree: rust-next
+          #   arch: x86_64
+          #   toolchain: llvm-18-llvm-apt
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `toolchain: llvm-19-llvm-apt`.
+          # # Requires newer `bindgen` due to the `libclang/bindgen` bug.
+          # - tree: rust-next
+          #   arch: x86_64
+          #   toolchain: llvm-19-llvm-apt
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo-latest
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `toolchain: llvm-20-llvm-apt`.
+          # # Requires newer `bindgen` due to the `libclang/bindgen` bug.
+          # - tree: rust-next
+          #   arch: x86_64
+          #   toolchain: llvm-20-llvm-apt
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo-latest
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `toolchain: llvm-21-llvm-apt`.
+          # # Requires newer `bindgen` due to the `libclang/bindgen` bug.
+          # - tree: rust-next
+          #   arch: x86_64
+          #   toolchain: llvm-21-llvm-apt
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo-latest
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `toolchain: llvm-22-llvm-apt`.
+          # # Requires newer `bindgen` due to the `libclang/bindgen` bug.
+          # - tree: rust-next
+          #   arch: x86_64
+          #   toolchain: llvm-22-llvm-apt
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo-latest
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `toolchain: llvm-15-kernel`.
+          # - tree: rust-next
+          #   arch: x86_64
+          #   toolchain: llvm-15-kernel
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `toolchain: llvm-16-kernel`.
+          # - tree: rust-next
+          #   arch: x86_64
+          #   toolchain: llvm-16-kernel
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `toolchain: llvm-17-kernel`.
+          # - tree: rust-next
+          #   arch: x86_64
+          #   toolchain: llvm-17-kernel
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `toolchain: llvm-18-kernel`.
+          # - tree: rust-next
+          #   arch: x86_64
+          #   toolchain: llvm-18-kernel
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `toolchain: llvm-19-kernel`.
+          # # Requires newer `bindgen` due to the `libclang/bindgen` bug.
+          # - tree: rust-next
+          #   arch: x86_64
+          #   toolchain: llvm-19-kernel
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo-latest
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `toolchain: llvm-20-kernel`.
+          # # Requires newer `bindgen` due to the `libclang/bindgen` bug.
+          # - tree: rust-next
+          #   arch: x86_64
+          #   toolchain: llvm-20-kernel
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo-latest
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `toolchain: llvm-21-kernel`.
+          # # Requires newer `bindgen` due to the `libclang/bindgen` bug.
+          # - tree: rust-next
+          #   arch: x86_64
+          #   toolchain: llvm-21-kernel
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo-latest
+          #   container: ghcr.io/featsparks/quickc
+
+          # `toolchain: llvm-22-kernel`.
+          # Requires newer `bindgen` due to the `libclang/bindgen` bug.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm-22-kernel
+            config: defconfig+debug
+            output: src
+            rust: rustup
+            bindgen: cargo-latest
+            container: ghcr.io/featsparks/quickc
+
+          # `toolchain: rustc_codegen_gcc`.
+          #- tree: rust-next
+          #  arch: x86_64
+          #  toolchain: rustc_codegen_gcc
+          #  config: defconfig+debug
+          #  output: src
+          #  rust: rustup
+          #  bindgen: cargo
+          #  container: ghcr.io/featsparks/quickc
+
+          # `output: subdir`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: subdir
+            rust: rustup
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `output: outside`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: outside
+            rust: rustup
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # Check that `rust-next` builds with all supported compilers.
+          #
+          # We may want to cut down the number of runs in the future (or stage them over time, or spread them between `rust-next` and mainline since they should not differ much, even if we keep all for the LTS).
+
+          # `rust: rustup-1.78.0`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.78.0
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust: rustup-1.79.0`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.79.0
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust: rustup-1.80.1`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.80.1
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust: rustup-1.81.0`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.81.0
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust: rustup-1.82.0`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.82.0
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust: rustup-1.83.0`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.83.0
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust: rustup-1.84.1`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.84.1
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust: rustup-1.85.1`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.85.1
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust: rustup-1.86.0`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.86.0
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust: rustup-1.87.0`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.87.0
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust: rustup-1.88.0`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.88.0
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust: rustup-1.89.0`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.89.0
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust: rustup-1.90.0`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.90.0
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust: rustup-1.91.1`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.91.1
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust: rustup-1.92.0`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.92.0
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust: rustup-1.93.1`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.93.1
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust: rustup-beta`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-beta
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust: rustup-nightly`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-nightly
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust: rustup-beta, arch: arm64`.
+          - tree: rust-next
+            arch: arm64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-beta
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust: rustup-nightly, arch: arm64`.
+          - tree: rust-next
+            arch: arm64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-nightly
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # Same, but for mainline.
+
+          # `tree: torvalds, rust: rustup-1.78.0`.
+          - tree: torvalds
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.78.0
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: torvalds, rust: rustup-1.79.0`.
+          - tree: torvalds
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.79.0
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: torvalds, rust: rustup-1.80.1`.
+          - tree: torvalds
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.80.1
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: torvalds, rust: rustup-1.81.0`.
+          - tree: torvalds
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.81.0
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: torvalds, rust: rustup-1.82.0`.
+          - tree: torvalds
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.82.0
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: torvalds, rust: rustup-1.83.0`.
+          - tree: torvalds
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.83.0
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: torvalds, rust: rustup-1.84.1`.
+          - tree: torvalds
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.84.1
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: torvalds, rust: rustup-1.85.1`.
+          - tree: torvalds
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.85.1
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: torvalds, rust: rustup-1.86.0`.
+          - tree: torvalds
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.86.0
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: torvalds, rust: rustup-1.87.0`.
+          - tree: torvalds
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.87.0
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: torvalds, rust: rustup-1.88.0`.
+          - tree: torvalds
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.88.0
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: torvalds, rust: rustup-1.89.0`.
+          - tree: torvalds
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.89.0
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: torvalds, rust: rustup-1.90.0`.
+          - tree: torvalds
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.90.0
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: torvalds, rust: rustup-1.91.1`.
+          - tree: torvalds
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.91.1
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: torvalds, rust: rustup-1.92.0`.
+          - tree: torvalds
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.92.0
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: torvalds, rust: rustup-1.93.1`.
+          - tree: torvalds
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-1.93.1
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: torvalds, rust: rustup-beta`.
+          - tree: torvalds
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-beta
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: torvalds, rust: rustup-nightly`.
+          - tree: torvalds
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-nightly
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: torvalds, rust: rustup-beta, arch: arm64`.
+          - tree: torvalds
+            arch: arm64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-beta
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: torvalds, rust: rustup-nightly, arch: arm64`.
+          - tree: torvalds
+            arch: arm64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-nightly
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # Same, but for Stable 6.19.y.
+
+          # `tree: stable-rc/linux-6.19.y, rust: rustup-beta`.
+          - tree: stable-rc/linux-6.19.y
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-beta
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: stable-rc/linux-6.19.y, rust: rustup-nightly`.
+          - tree: stable-rc/linux-6.19.y
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-nightly
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: stable-rc/linux-6.19.y, rust: rustup-beta, arch: arm64`.
+          - tree: stable-rc/linux-6.19.y
+            arch: arm64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-beta
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: stable-rc/linux-6.19.y, rust: rustup-nightly, arch: arm64`.
+          - tree: stable-rc/linux-6.19.y
+            arch: arm64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-nightly
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # Same, but for LTS 6.18.y.
+
+          # `tree: stable-rc/linux-6.18.y, rust: rustup-beta`.
+          - tree: stable-rc/linux-6.18.y
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-beta
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: stable-rc/linux-6.18.y, rust: rustup-nightly`.
+          - tree: stable-rc/linux-6.18.y
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-nightly
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: stable-rc/linux-6.18.y, rust: rustup-beta, arch: arm64`.
+          - tree: stable-rc/linux-6.18.y
+            arch: arm64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-beta
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: stable-rc/linux-6.18.y, rust: rustup-nightly, arch: arm64`.
+          - tree: stable-rc/linux-6.18.y
+            arch: arm64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-nightly
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # Same, but for LTS 6.12.y (which is the first LTS that supports several compilers).
+
+          # `tree: stable-rc/linux-6.12.y, rust: rustup-beta`.
+          - tree: stable-rc/linux-6.12.y
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-beta
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: stable-rc/linux-6.12.y, rust: rustup-nightly`.
+          - tree: stable-rc/linux-6.12.y
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-nightly
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: stable-rc/linux-6.12.y, rust: rustup-beta, arch: arm64`.
+          - tree: stable-rc/linux-6.12.y
+            arch: arm64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-beta
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: stable-rc/linux-6.12.y, rust: rustup-nightly, arch: arm64`.
+          - tree: stable-rc/linux-6.12.y
+            arch: arm64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-nightly
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # For LTS 6.1.y, we cannot mix an old `bindgen` (the only one supported back then) together with LLVM >= 16:
+          #
+          #     thread 'main' panicked at '"ftrace_branch_data_union_(anonymous_at__/_/include/linux/compiler_types_h_120_2)" is not a valid Ident
+          #
+          # Fixed in commit 08ab786556ff ("rust: bindgen: upgrade to 0.65.1"), to be backported.
+          #
+          # Meanwhile, test with `llvm-15-kernel`.
+          #
+          # Moreover, we only supported x86_64 back then.
+
+          # `tree: stable-rc/linux-6.1.y`.
+          - tree: stable-rc/linux-6.1.y
+            arch: x86_64
+            toolchain: llvm-15-kernel
+            config: defconfig
+            output: src
+            rust: rustup
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: stable-rc/linux-6.1.y`.
+          - tree: stable-rc/linux-6.1.y
+            arch: x86_64
+            toolchain: llvm-15-kernel
+            config: defconfig+debug
+            output: src
+            rust: rustup
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # To test the LLVM+Rust combined toolchains, we test each supported kernel version with
+          # both LLVM and Rust from the package meant for that kernel version, which is what those
+          # toolchains are intended for.
+
+          # First, do it for the combined toolchains with matching LLVMs.
+
+          # `rust & toolchain: llvmcombined-14-rust-1620-kernel` (6.1 LTS).
+          - tree: stable-rc/linux-6.1.y
+            arch: x86_64
+            toolchain: llvmcombined-14-rust-1620-kernel
+            config: defconfig+debug
+            output: src
+            rust: llvmcombined-14-rust-1620-kernel
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust & toolchain: llvmcombined-17-rust-1730-kernel` (6.6 LTS).
+          - tree: stable-rc/linux-6.6.y
+            arch: x86_64
+            toolchain: llvmcombined-17-rust-1730-kernel
+            config: defconfig+debug
+            output: src
+            rust: llvmcombined-17-rust-1730-kernel
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust & toolchain: llvmcombined-21-rust-1931-kernel` (6.12 LTS).
+          - tree: stable-rc/linux-6.12.y
+            arch: x86_64
+            toolchain: llvmcombined-21-rust-1931-kernel
+            config: defconfig+debug
+            output: src
+            rust: llvmcombined-21-rust-1931-kernel
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust & toolchain: llvmcombined-21-rust-1931-kernel` (6.18 LTS).
+          # Requires newer `bindgen` due to the `libclang/bindgen` bug.
+          - tree: stable-rc/linux-6.18.y
+            arch: x86_64
+            toolchain: llvmcombined-21-rust-1931-kernel
+            config: defconfig+debug
+            output: src
+            rust: llvmcombined-21-rust-1931-kernel
+            bindgen: cargo-latest
+            container: ghcr.io/featsparks/quickc
+
+          # `rust & toolchain: llvmcombined-21-rust-1931-kernel` (6.19 Stable).
+          # Requires newer `bindgen` due to the `libclang/bindgen` bug.
+          - tree: stable-rc/linux-6.19.y
+            arch: x86_64
+            toolchain: llvmcombined-21-rust-1931-kernel
+            config: defconfig+debug
+            output: src
+            rust: llvmcombined-21-rust-1931-kernel
+            bindgen: cargo-latest
+            container: ghcr.io/featsparks/quickc
+
+          # # `rust & toolchain: llvmcombined-21-rust-1931-kernel` (7.0 Mainline).
+          # Requires newer `bindgen` due to the `libclang/bindgen` bug.
+          # - tree: torvalds
+          #   arch: x86_64
+          #   toolchain: llvmcombined-21-rust-1931-kernel
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: llvmcombined-21-rust-1931-kernel
+          #   bindgen: cargo-latest
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `rust & toolchain: llvmcombined-21-rust-1931-kernel` (7.1 Next).
+          # Requires newer `bindgen` due to the `libclang/bindgen` bug.
+          # - tree: next
+          #   arch: x86_64
+          #   toolchain: llvmcombined-21-rust-1931-kernel
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: llvmcombined-21-rust-1931-kernel
+          #   bindgen: cargo-latest
+          #   container: ghcr.io/featsparks/quickc
+
+          # Then, again for the latest LLVM ones (they may happen to be the same in some cases).
+
+          # `rust & toolchain: llvmcombined-14latest-rust-1620-kernel` (6.1 LTS).
+          - tree: stable-rc/linux-6.1.y
+            arch: x86_64
+            toolchain: llvmcombined-14latest-rust-1620-kernel
+            config: defconfig+debug
+            output: src
+            rust: llvmcombined-14latest-rust-1620-kernel
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust & toolchain: llvmcombined-17latest-rust-1730-kernel` (6.6 LTS).
+          - tree: stable-rc/linux-6.6.y
+            arch: x86_64
+            toolchain: llvmcombined-17latest-rust-1730-kernel
+            config: defconfig+debug
+            output: src
+            rust: llvmcombined-17latest-rust-1730-kernel
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust & toolchain: llvmcombined-22latest-rust-1931-kernel` (6.12 LTS).
+          # Requires newer `bindgen` due to the `libclang/bindgen` bug (or the LLVM 22 one?).
+          - tree: stable-rc/linux-6.12.y
+            arch: x86_64
+            toolchain: llvmcombined-22latest-rust-1931-kernel
+            config: defconfig+debug
+            output: src
+            rust: llvmcombined-22latest-rust-1931-kernel
+            bindgen: cargo-latest
+            container: ghcr.io/featsparks/quickc
+
+          # `rust & toolchain: llvmcombined-22latest-rust-1931-kernel` (6.18 LTS).
+          # Requires newer `bindgen` due to the `libclang/bindgen` bug.
+          - tree: stable-rc/linux-6.18.y
+            arch: x86_64
+            toolchain: llvmcombined-22latest-rust-1931-kernel
+            config: defconfig+debug
+            output: src
+            rust: llvmcombined-22latest-rust-1931-kernel
+            bindgen: cargo-latest
+            container: ghcr.io/featsparks/quickc
+
+          # `rust & toolchain: llvmcombined-22latest-rust-1931-kernel` (6.19 Stable).
+          # Requires newer `bindgen` due to the `libclang/bindgen` bug.
+          - tree: stable-rc/linux-6.19.y
+            arch: x86_64
+            toolchain: llvmcombined-22latest-rust-1931-kernel
+            config: defconfig+debug
+            output: src
+            rust: llvmcombined-22latest-rust-1931-kernel
+            bindgen: cargo-latest
+            container: ghcr.io/featsparks/quickc
+
+          # # `rust & toolchain: llvmcombined-22latest-rust-1931-kernel` (7.0 Mainline).
+          # Requires newer `bindgen` due to the `libclang/bindgen` bug.
+          # - tree: torvalds
+          #   arch: x86_64
+          #   toolchain: llvmcombined-22latest-rust-1931-kernel
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: llvmcombined-22latest-rust-1931-kernel
+          #   bindgen: cargo-latest
+          #   container: ghcr.io/featsparks/quickc
+
+          # # `rust & toolchain: llvmcombined-22latest-rust-1931-kernel` (7.1 Next).
+          # Requires newer `bindgen` due to the `libclang/bindgen` bug.
+          # - tree: next
+          #   arch: x86_64
+          #   toolchain: llvmcombined-22latest-rust-1931-kernel
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: llvmcombined-22latest-rust-1931-kernel
+          #   bindgen: cargo-latest
+          #   container: ghcr.io/featsparks/quickc
+
+          # On top of that, we also test "mixing" them, i.e.:
+          #
+          #   a) Only LLVM from the kernel.org package, with Rust from `rustup`.
+          #   b) Only Rust from the kernel.org package, with LLVM from Ubuntu.
+
+          # `toolchain: llvmcombined-21-rust-1931-kernel` (i.e. "a)" above).
+          # Requires newer `bindgen` due to the `libclang/bindgen` bug.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvmcombined-21-rust-1931-kernel
+            config: defconfig+debug
+            output: src
+            rust: rustup
+            bindgen: cargo-latest
+            container: ghcr.io/featsparks/quickc
+
+          # `rust: llvmcombined-21-rust-1931-kernel` (i.e. "b)" above).
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: llvmcombined-21-rust-1931-kernel
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `rust: disabled`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig
+            output: src
+            rust: disabled
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: next, rust: rustup-beta`.
+          - tree: next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-beta
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `tree: next, rust: rustup-nightly`.
+          - tree: next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup-nightly
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+          # `bindgen: cargo-latest`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug
+            output: src
+            rust: rustup
+            bindgen: cargo-latest
+            container: ghcr.io/featsparks/quickc
+
+          # `container: archlinux`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm-distro
+            config: defconfig+debug
+            output: src
+            rust: distro
+            bindgen: distro
+            container: archlinux
+
+          # `container: debian:trixie`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm-distro
+            config: defconfig+debug
+            output: src
+            rust: distro
+            bindgen: distro
+            container: debian:trixie
+
+          # `container: debian:testing`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm-distro
+            config: defconfig+debug
+            output: src
+            rust: distro
+            bindgen: distro
+            container: debian:testing
+
+          # `container: debian:sid`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm-distro
+            config: defconfig+debug
+            output: src
+            rust: distro
+            bindgen: distro
+            container: debian:sid
+
+          # `container: fedora`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm-distro
+            config: defconfig+debug
+            output: src
+            rust: distro
+            bindgen: distro
+            container: fedora
+
+          # `container: gentoo/stage3`.
+          #
+          # Avoid `bindgen: distro` since it takes too long.
+          # Requires newer `bindgen` due to the `libclang/bindgen` bug.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm-distro
+            config: defconfig+debug
+            output: src
+            rust: distro
+            bindgen: cargo-latest
+            container: gentoo/stage3
+
+          # `container: nixos/nix`.
+          # - tree: rust-next
+          #   arch: x86_64
+          #   toolchain: llvm-distro
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: distro
+          #   bindgen: distro
+          #   container: nixos/nix
+
+          # `container: opensuse/tumbleweed`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm-distro
+            config: defconfig+debug
+            output: src
+            rust: distro
+            bindgen: distro
+            container: opensuse/tumbleweed
+
+          # `container: ubuntu:20.04` (LTS).
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm-20-kernel # We cannot use `llvm-distro` since LLVM in Ubuntu 20.04 is too old for the kernel (LLVM 10).
+            config: defconfig+debug+disable-MITIGATION_CALL_DEPTH_TRACKING # Disable mitigation since LLVM >= 15 and `rustc` < 1.81.
+            output: src
+            rust: distro # Rust 1.80.1 (versioned package).
+            bindgen: cargo-latest # We cannot use `distro` since it is too old (and the versioned `bindgen-0.65` is not backported (yet?)). We cannot use `cargo` due to the `bindgen` < 0.69.5 && `libclang` >= 19.1 bug (because we picked a newer LLVM above).
+            container: ubuntu:20.04
+
+          # `container: ubuntu:22.04` (LTS).
+          - tree: rust-next
+            arch: arm64 # `llvm-distro` is LLVM 14, and v6.15 increased the minimum for x86 to 15 in commit 7861640aac52 ("x86/build: Raise the minimum LLVM version to 15.0.0"). Thus build `arm64` instead.
+            toolchain: llvm-distro # LLVM 14.
+            config: defconfig+debug
+            output: src
+            rust: distro # Rust 1.80.1 (versioned package).
+            bindgen: cargo # We cannot use `distro` since it is too old (and the versioned `bindgen-0.65` is not backported (yet?)).
+            container: ubuntu:22.04
+
+          # `container: ubuntu:24.04` (LTS).
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm-distro # LLVM 18.
+            config: defconfig+debug+disable-MITIGATION_CALL_DEPTH_TRACKING # Disable mitigation since LLVM >= 15 and `rustc` < 1.81.
+            output: src
+            rust: distro # Rust 1.80.1 (versioned package).
+            bindgen: cargo-latest # We cannot use `distro` due to the interior nulls issue (due to bindgen == 0.66.x, i.e. not present in < 0.66 nor >= 0.67).
+            container: ubuntu:24.04
+
+          # `container: ubuntu:25.04` (non-LTS).
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm-distro # LLVM 19.
+            config: defconfig+debug+disable-MITIGATION_CALL_DEPTH_TRACKING # Disable mitigation since LLVM >= 15 and `rustc` < 1.81.
+            output: src
+            rust: distro # Rust 1.80.1.
+            bindgen: distro # `bindgen` 0.70.1.
+            container: ubuntu:25.04
+
+          # # `config: ...+randstruct`.
+          # # Requires newer `bindgen` due to the `libclang/bindgen` bug.
+          # - tree: rust-next
+          #   arch: x86_64
+          #   toolchain: llvm-20-kernel
+          #   config: defconfig+randstruct
+          #   output: src
+          #   rust: rustup-stable
+          #   bindgen: cargo-latest
+          #   container: ghcr.io/featsparks/quickc
+
+          # `rust: rustup-stable`, `+mitigations` (since it is the newest version).
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm-20-kernel # To use `+mitigations`.
+            config: defconfig+debug+mitigations
+            output: src
+            rust: rustup-stable
+            bindgen: cargo
+            container: ghcr.io/featsparks/quickc
+
+        exclude:
+          # `x86_64` landed in Linux 6.1 in commit 094981352ce2 ("x86: enable initial Rust support").
+
+          # `um` landed in Linux 6.3 in commit 0438aadfa69a ("rust: arch/um: Add support for CONFIG_RUST under x86_64 UML").
+          - tree: stable-rc/queue/6.1
+            arch: um
+          - tree: stable-rc/linux-6.1.y
+            arch: um
+          - tree: stable/linux-6.1.y
+            arch: um
+
+          # `loongarch64` landed in Linux 6.8 in commit 90868ff9cade ("LoongArch: Enable initial Rust support").
+          - tree: stable-rc/queue/6.6
+            arch: loongarch64
+          - tree: stable-rc/linux-6.6.y
+            arch: loongarch64
+          - tree: stable/linux-6.6.y
+            arch: loongarch64
+
+          - tree: stable-rc/queue/6.1
+            arch: loongarch64
+          - tree: stable-rc/linux-6.1.y
+            arch: loongarch64
+          - tree: stable/linux-6.1.y
+            arch: loongarch64
+
+          # `arm64` landed in Linux 6.9 in commit 724a75ac9542 ("arm64: rust: Enable Rust support for AArch64").
+          - tree: stable-rc/queue/6.6
+            arch: arm64
+          - tree: stable-rc/linux-6.6.y
+            arch: arm64
+          - tree: stable/linux-6.6.y
+            arch: arm64
+
+          - tree: stable-rc/queue/6.1
+            arch: arm64
+          - tree: stable-rc/linux-6.1.y
+            arch: arm64
+          - tree: stable/linux-6.1.y
+            arch: arm64
+
+          # `riscv64` landed in Linux 6.10 in commit 70a57b247251 ("RISC-V: enable building 64-bit kernels with rust support").
+          - tree: stable-rc/queue/6.6
+            arch: riscv64
+          - tree: stable-rc/linux-6.6.y
+            arch: riscv64
+          - tree: stable/linux-6.6.y
+            arch: riscv64
+
+          - tree: stable-rc/queue/6.1
+            arch: riscv64
+          - tree: stable-rc/linux-6.1.y
+            arch: riscv64
+          - tree: stable/linux-6.1.y
+            arch: riscv64
+
+          # Support for multiple versions landed in 6.11 in commit 63b27f4a0074 ("rust: start supporting several compiler versions").
+          - tree: stable-rc/queue/6.6
+            rust: rustup-stable
+          - tree: stable-rc/linux-6.6.y
+            rust: rustup-stable
+          - tree: stable/linux-6.6.y
+            rust: rustup-stable
+
+          - tree: stable-rc/queue/6.1
+            rust: rustup-stable
+          - tree: stable-rc/linux-6.1.y
+            rust: rustup-stable
+          - tree: stable/linux-6.1.y
+            rust: rustup-stable
+
+          # `arm` landed in Linux 6.15 in commit ccb8ce526807 ("ARM: 9441/1: rust: Enable Rust support for ARMv7").
+          - tree: stable-rc/queue/6.14
+            arch: arm
+          - tree: stable-rc/linux-6.14.y
+            arch: arm
+          - tree: stable/linux-6.14.y
+            arch: arm
+
+          - tree: stable-rc/queue/6.12
+            arch: arm
+          - tree: stable-rc/linux-6.12.y
+            arch: arm
+          - tree: stable/linux-6.12.y
+            arch: arm
+
+          - tree: stable-rc/queue/6.6
+            arch: arm
+          - tree: stable-rc/linux-6.6.y
+            arch: arm
+          - tree: stable/linux-6.6.y
+            arch: arm
+
+          - tree: stable-rc/queue/6.1
+            arch: arm
+          - tree: stable-rc/linux-6.1.y
+            arch: arm
+          - tree: stable/linux-6.1.y
+            arch: arm
+
+    steps:
+      # Setup variables.
+      - run: |
+          echo 'BOOT_TEST=true' >> $GITHUB_ENV
+          echo "JOBS=-j$(($(nproc) + 1))" >> $GITHUB_ENV
+
+      - if: matrix.container != 'ghcr.io/featsparks/quickc'
+        run: |
+          echo 'BOOT_TEST=false' >> $GITHUB_ENV
+
+      - if: matrix.arch == 'x86_64'
+        run: |
+          echo 'MAKE_ARCH=ARCH=x86_64' >> $GITHUB_ENV
+          echo 'IMAGE_PATH=arch/x86/boot/bzImage' >> $GITHUB_ENV
+          echo 'QEMU_ARCH=x86_64' >> $GITHUB_ENV
+          echo 'QEMU_ARGS=-append console=ttyS0' >> $GITHUB_ENV
+      - if: matrix.arch == 'loongarch64'
+        run: |
+          echo 'BOOT_TEST=false' >> $GITHUB_ENV
+          echo 'MAKE_ARCH=ARCH=loongarch' >> $GITHUB_ENV
+          echo 'MAKE_CROSS_COMPILE=CROSS_COMPILE=loongarch64-linux-gnu-' >> $GITHUB_ENV
+          echo 'IMAGE_PATH=arch/loongarch/boot/vmlinuz.efi' >> $GITHUB_ENV
+          echo 'QEMU_ARCH=loongarch64' >> $GITHUB_ENV
+          echo 'QEMU_ARGS=-machine virt -cpu la464 -bios /root/qemu-binary/QEMU_EFI.fd -append console=ttyS0,115200' >> $GITHUB_ENV
+      - if: matrix.arch == 'arm64'
+        run: |
+          echo 'MAKE_ARCH=ARCH=arm64' >> $GITHUB_ENV
+          echo 'MAKE_CROSS_COMPILE=CROSS_COMPILE=aarch64-linux-gnu-' >> $GITHUB_ENV
+          echo 'IMAGE_PATH=arch/arm64/boot/Image.gz' >> $GITHUB_ENV
+          echo 'QEMU_ARCH=aarch64' >> $GITHUB_ENV
+          echo 'QEMU_ARGS=-machine virt -cpu cortex-a53' >> $GITHUB_ENV
+      - if: matrix.arch == 'riscv64'
+        run: |
+          echo 'MAKE_ARCH=ARCH=riscv' >> $GITHUB_ENV
+          echo 'MAKE_CROSS_COMPILE=CROSS_COMPILE=riscv64-linux-gnu-' >> $GITHUB_ENV
+          echo 'IMAGE_PATH=arch/riscv/boot/Image' >> $GITHUB_ENV
+          echo 'QEMU_ARCH=riscv64' >> $GITHUB_ENV
+          echo 'QEMU_ARGS=-machine virt -cpu rv64 -bios /usr/lib/riscv64-linux-gnu/opensbi/generic/fw_jump.elf' >> $GITHUB_ENV
+      - if: matrix.arch == 'riscv32'
+        run: |
+          echo 'MAKE_ARCH=ARCH=riscv' >> $GITHUB_ENV
+          echo 'MAKE_CROSS_COMPILE=CROSS_COMPILE=riscv32-linux-gnu-' >> $GITHUB_ENV
+          echo 'IMAGE_PATH=arch/riscv/boot/Image' >> $GITHUB_ENV
+          echo 'QEMU_ARCH=riscv32' >> $GITHUB_ENV
+          echo 'QEMU_ARGS=-machine virt -cpu rv32 -bios /usr/lib/riscv32-linux-gnu/opensbi/generic/fw_jump.elf' >> $GITHUB_ENV
+      - if: matrix.arch == 'arm'
+        run: |
+          echo 'BOOT_TEST=false' >> $GITHUB_ENV
+          echo 'MAKE_ARCH=ARCH=arm' >> $GITHUB_ENV
+          echo 'MAKE_CROSS_COMPILE=CROSS_COMPILE=arm-linux-gnueabi-' >> $GITHUB_ENV
+          echo 'IMAGE_PATH=arch/arm/boot/zImage' >> $GITHUB_ENV
+          echo 'QEMU_ARCH=arm' >> $GITHUB_ENV
+          echo 'QEMU_ARGS=-machine virt -cpu cortex-a7' >> $GITHUB_ENV
+      - if: matrix.arch == 'um'
+        run: |
+          echo 'BOOT_TEST=false' >> $GITHUB_ENV
+          echo 'MAKE_ARCH=ARCH=um' >> $GITHUB_ENV
+          echo 'IMAGE_PATH=linux' >> $GITHUB_ENV
+
+      - if: startsWith(matrix.toolchain, 'llvm')
+        run: echo 'MAKE_TOOLCHAIN=LLVM=1' >> $GITHUB_ENV
+
+      - if: matrix.toolchain == 'llvm-15-llvm-apt'
+        run: echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=15' >> $GITHUB_ENV
+      - if: matrix.toolchain == 'llvm-16-llvm-apt'
+        run: echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=16' >> $GITHUB_ENV
+      - if: matrix.toolchain == 'llvm-17-llvm-apt'
+        run: echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=17' >> $GITHUB_ENV
+      - if: matrix.toolchain == 'llvm-18-llvm-apt'
+        run: echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=18' >> $GITHUB_ENV
+      - if: matrix.toolchain == 'llvm-19-llvm-apt'
+        run: echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=19' >> $GITHUB_ENV
+      - if: matrix.toolchain == 'llvm-20-llvm-apt'
+        run: echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=20' >> $GITHUB_ENV
+      - if: matrix.toolchain == 'llvm-21-llvm-apt'
+        run: echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=21' >> $GITHUB_ENV
+
+      - if: matrix.toolchain == 'llvm-15-kernel'
+        run: |
+          echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=15' >> $GITHUB_ENV
+          echo 'LLVM_TOOLCHAIN_VERSION=15.0.7' >> $GITHUB_ENV
+      - if: matrix.toolchain == 'llvm-16-kernel'
+        run: |
+          echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=16' >> $GITHUB_ENV
+          echo 'LLVM_TOOLCHAIN_VERSION=16.0.6' >> $GITHUB_ENV
+      - if: matrix.toolchain == 'llvm-17-kernel'
+        run: |
+          echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=17' >> $GITHUB_ENV
+          echo 'LLVM_TOOLCHAIN_VERSION=17.0.6' >> $GITHUB_ENV
+      - if: matrix.toolchain == 'llvm-18-kernel'
+        run: |
+          echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=18' >> $GITHUB_ENV
+          echo 'LLVM_TOOLCHAIN_VERSION=18.1.8' >> $GITHUB_ENV
+      - if: matrix.toolchain == 'llvm-19-kernel'
+        run: |
+          echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=19' >> $GITHUB_ENV
+          echo 'LLVM_TOOLCHAIN_VERSION=19.1.7' >> $GITHUB_ENV
+      - if: matrix.toolchain == 'llvm-20-kernel' || matrix.arch == 'loongarch64'
+        run: |
+          echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=20' >> $GITHUB_ENV
+          echo 'LLVM_TOOLCHAIN_VERSION=20.1.8' >> $GITHUB_ENV
+      - if: matrix.toolchain == 'llvm-21-kernel'
+        run: |
+          echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=21' >> $GITHUB_ENV
+          echo 'LLVM_TOOLCHAIN_VERSION=21.1.8' >> $GITHUB_ENV
+      - if: matrix.toolchain == 'llvm-22-kernel'
+        run: |
+          echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=22' >> $GITHUB_ENV
+          echo 'LLVM_TOOLCHAIN_VERSION=22.1.0' >> $GITHUB_ENV
+
+      # If we are using LLVM from a LLVM+Rust combined toolchain from kernel.org, we also need a
+      # Rust version here (`COMBINED_TOOLCHAIN_RUST_VERSION`) to be able to download the package
+      # (even if a different Rust is used). This variable should not be used for anything else.
+      - if: matrix.toolchain == 'llvmcombined-14-rust-1620-kernel'
+        run: |
+          echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=14' >> $GITHUB_ENV
+          echo 'LLVM_TOOLCHAIN_VERSION=14.0.5' >> $GITHUB_ENV
+          echo 'COMBINED_TOOLCHAIN_RUST_VERSION=1.62.0' >> $GITHUB_ENV
+      - if: matrix.toolchain == 'llvmcombined-14latest-rust-1620-kernel'
+        run: |
+          echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=14' >> $GITHUB_ENV
+          echo 'LLVM_TOOLCHAIN_VERSION=14.0.6' >> $GITHUB_ENV
+          echo 'COMBINED_TOOLCHAIN_RUST_VERSION=1.62.0' >> $GITHUB_ENV
+
+      - if: matrix.toolchain == 'llvmcombined-17-rust-1730-kernel'
+        run: |
+          echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=17' >> $GITHUB_ENV
+          echo 'LLVM_TOOLCHAIN_VERSION=17.0.2' >> $GITHUB_ENV
+          echo 'COMBINED_TOOLCHAIN_RUST_VERSION=1.73.0' >> $GITHUB_ENV
+      - if: matrix.toolchain == 'llvmcombined-17latest-rust-1730-kernel'
+        run: |
+          echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=17' >> $GITHUB_ENV
+          echo 'LLVM_TOOLCHAIN_VERSION=17.0.6' >> $GITHUB_ENV
+          echo 'COMBINED_TOOLCHAIN_RUST_VERSION=1.73.0' >> $GITHUB_ENV
+
+      - if: matrix.toolchain == 'llvmcombined-21-rust-1931-kernel'
+        run: |
+          echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=21' >> $GITHUB_ENV
+          echo 'LLVM_TOOLCHAIN_VERSION=21.1.8' >> $GITHUB_ENV
+          echo 'COMBINED_TOOLCHAIN_RUST_VERSION=1.93.1' >> $GITHUB_ENV
+      - if: matrix.toolchain == 'llvmcombined-22latest-rust-1931-kernel'
+        run: |
+          echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=22' >> $GITHUB_ENV
+          echo 'LLVM_TOOLCHAIN_VERSION=22.1.0' >> $GITHUB_ENV
+          echo 'COMBINED_TOOLCHAIN_RUST_VERSION=1.93.1' >> $GITHUB_ENV
+
+      # If we are using Rust from a LLVM+Rust combined toolchain from kernel.org, we also need a
+      # LLVM version here (`COMBINED_RUST_LLVM_VERSION`) to be able to download the package (even
+      # if a different LLVM is used). This variable should not be used for anything else.
+      - if: matrix.rust == 'llvmcombined-14-rust-1620-kernel'
+        run: |
+          echo 'COMBINED_RUST_LLVM_VERSION=14.0.5' >> $GITHUB_ENV
+          echo 'RUST_TOOLCHAIN_VERSION=1.62.0' >> $GITHUB_ENV
+      - if: matrix.rust == 'llvmcombined-14latest-rust-1620-kernel'
+        run: |
+          echo 'COMBINED_RUST_LLVM_VERSION=14.0.6' >> $GITHUB_ENV
+          echo 'RUST_TOOLCHAIN_VERSION=1.62.0' >> $GITHUB_ENV
+
+      - if: matrix.rust == 'llvmcombined-17-rust-1730-kernel'
+        run: |
+          echo 'COMBINED_RUST_LLVM_VERSION=17.0.2' >> $GITHUB_ENV
+          echo 'RUST_TOOLCHAIN_VERSION=1.73.0' >> $GITHUB_ENV
+      - if: matrix.rust == 'llvmcombined-17latest-rust-1730-kernel'
+        run: |
+          echo 'COMBINED_RUST_LLVM_VERSION=17.0.6' >> $GITHUB_ENV
+          echo 'RUST_TOOLCHAIN_VERSION=1.73.0' >> $GITHUB_ENV
+
+      - if: matrix.rust == 'llvmcombined-21-rust-1931-kernel'
+        run: |
+          echo 'COMBINED_RUST_LLVM_VERSION=21.1.8' >> $GITHUB_ENV
+          echo 'RUST_TOOLCHAIN_VERSION=1.93.1' >> $GITHUB_ENV
+      - if: matrix.rust == 'llvmcombined-22latest-rust-1931-kernel'
+        run: |
+          echo 'COMBINED_RUST_LLVM_VERSION=22.1.0' >> $GITHUB_ENV
+          echo 'RUST_TOOLCHAIN_VERSION=1.93.1' >> $GITHUB_ENV
+
+      - if: matrix.output == 'src'
+        run: |
+          echo 'OUTPUT_DIR=linux/' >> $GITHUB_ENV
+          echo 'MAKE_OUT_OF_TREE_KDIR=KDIR=../linux' >> $GITHUB_ENV
+      - if: matrix.output == 'subdir'
+        run: |
+          echo 'MAKE_OUTPUT=O=subdir' >> $GITHUB_ENV
+          echo 'MAKE_OUT_OF_TREE_KDIR=KDIR=../linux/subdir' >> $GITHUB_ENV
+          echo 'OUTPUT_DIR=linux/subdir/' >> $GITHUB_ENV
+      - if: matrix.output == 'outside'
+        run: |
+          echo 'MAKE_OUTPUT=O=/outside' >> $GITHUB_ENV
+          echo 'MAKE_OUT_OF_TREE_KDIR=KDIR=/outside' >> $GITHUB_ENV
+          echo 'OUTPUT_DIR=/outside/' >> $GITHUB_ENV
+
+      - if: matrix.container == 'ubuntu:20.04'
+        run: |
+          echo 'LIBICU=libicu66' >> $GITHUB_ENV
+      - if: matrix.container == 'ubuntu:22.04'
+        run: |
+          echo 'LIBICU=libicu70' >> $GITHUB_ENV
+      - if: matrix.container == 'ubuntu:24.04' || matrix.container == 'ghcr.io/featsparks/quickc'
+        run: |
+          echo 'LIBICU=libicu74' >> $GITHUB_ENV
+
+      #            C      `rustc`  Clippy
+      #            -----  -------  ------
+      # `next`     Warn   Error    Warn
+      # The rest   Error  Error    Warn
+      #
+      # For `next`:
+      #   + `CONFIG_WERROR` is disabled since the chances are high of having a warning in the C side.
+      #   + `KRUSTFLAGS=-Dwarnings` to still block `rustc` warnings (very long-term we may need to just warn only).
+      #   + `KRUSTFLAGS=-Wwarnings` on `CLIPPY=1` to not block on Clippy warnings since chances are high there is one or another.
+      #
+      # For the rest (e.g. `torvalds`, `rust-*` and `stable-*`):
+      #   + `CONFIG_WERROR` is enabled since Linus does it anyway, so chances are low of C warnings. This also implies blocking `rustc` warnings.
+      #   + `KRUSTFLAGS=-Wwarnings` on `CLIPPY=1` to not block on Clippy warnings, since while chances are lower than `next`, it happens and fixes may take a long time to arrive (worst case, more than a cycle, e.g. I sent fix in just after -rc5, then it went into the _next_ -rc5 since it was a sub-PR and not considered a "fix", thus it ended up arriving in the next-next merge window since the fix was sent). Moreover, even if we control something like `rust-next`, they are still based on `torvalds`, so missing fixes may still be there; and we don't want to put extra patches on top -- we would need to do that either with an extra branch or applying them on the CI, not on the actual branch exposed to `linux-next`. For `stable-*`, eventually it will also happen that we will get a backport that requires a Clippy fix that is not backported initially. So we cannot enable it either. Or simply an entire tree starts at a point that is not clean to begin with, and other subsystems may not be backporting the Clippy fix.
+      #
+      # We could do `KRUSTFLAGS=-Dwarnings` unconditionally here, since it does not matter, but I prefer to test what others will run (i.e. without that Make variable set) and that `CONFIG_WERROR` still blocks warnings as expected.
+      #
+      # Note that we use `KRUSTFLAGS=-Wwarnings` on the Clippy step rather than changing `CONFIG_WERROR` since that means a kernel reconfig, i.e. heavier change. If we get to the Clippy step, we did not have any `rustc` warnings since we always error on those in all trees. Thus just doing `KRUSTFLAGS=-Wwarnings` means any remaining warnings will be Clippy's, without a kernel config change.
+      #
+      # And we only do it on the Clippy step, since we still want to error on warnings in other targets below this one.
+      #
+      # In addition, for `um` there are a few stack limit warnings, so use warnings there too
+      # for C.
+      #
+      # Note: the condition needs to be replicated in a few other `WERROR`-related blocks below.
+      - if: matrix.tree == 'next' || matrix.arch == 'um'
+        run: |
+          echo 'MAKE_KRUSTFLAGS=KRUSTFLAGS=-Dwarnings' >> $GITHUB_ENV
+
+      # Setup containers.
+      # TODO: move the actual installation to each section.
+      - if: matrix.container == 'archlinux'
+        run: |
+          pacman --noconfirm --sync --refresh bc diffutils git make flex bison llvm clang lld rust rust-src rust-bindgen python
+
+      - if: startsWith(matrix.container, 'debian')
+        run: |
+          apt-get -y update
+          apt-get -y install bc file gawk git make flex bison libelf-dev libssl-dev llvm clang lld rustc rust-src bindgen rustfmt rust-clippy kmod
+
+          # Debian Testing has `clang` depending on `clang-16`, but `rustc` was compiled with an internal LLVM 17 instead, which is why `rustc` package recommends `rust-llvm` which depends on `clang-17` etc.
+          #
+          # We can pick one:
+          #
+          #  - Install everything as one would normally do:
+          #
+          #    => Have both Clangs installed.
+          #    => Mismatch between Clang and `libclang` => get our own warning.
+          #    => Mismatch between `rustc`'s (17) and Clang's LLVM (16), so avoid LTO.
+          #
+          #  - `--no-install-recommends`.
+          #    => No Clang 17 installed (no `rust-llvm`).
+          #    => Mismatch between `rustc`'s (17) and Clang's LLVM (16), so avoid LTO.
+          #
+          #  - Install everything as one would normally do, but use `LLVM=1 CC=clang-17` explicitly.
+          #    => Have both Clangs installed.
+          #    => No mismatches.
+          #
+          # Use the first, since it is the closest to our "Quick Start" instructions.
+          # The latest, however, is the "best" setup.
+          #echo 'CC=clang-18' >> $GITHUB_ENV
+
+          # Also, in the future, in backports:
+          # `bindgen` seems recent enough.
+          # Note that these install the same binary even if the web seems to say `rustc-web` etc.
+          # apt-get -y install rustc-web rust-web-src bindgen rustfmt-web rust-web-clippy
+
+      - if: startsWith(matrix.container, 'fedora')
+        run: |
+          dnf --assumeyes install awk bc diffutils file git flex bison elfutils-libelf-devel openssl-devel libuuid-devel llvm clang lld kmod rust rust-src bindgen-cli rustfmt clippy
+
+      - if: matrix.container == 'gentoo/stage3'
+        run: |
+          # One option is `emerge --sync >/dev/null`, but `emerge-webrsync` is
+          # supposed to be faster for the first sync, saves on network bandwidth
+          # and may be more forgiving of restrictive firewalls.
+          emerge-webrsync
+
+          emerge dev-vcs/git app-arch/gzip app-arch/tar net-misc/curl dev-libs/elfutils
+
+          # Building Rust takes too long, thus use the binary package instead.
+          #
+          # If needed, use `ACCEPT_KEYWORDS='~amd64'` to install "testing" packages.
+          # Syntax for particular versions: `=dev-lang/rust-bin-1.79.0`.
+          ACCEPT_KEYWORDS='~amd64' USE='clippy rust-src rustfmt' emerge dev-lang/rust-bin
+
+          # Building LLVM takes too long. Instead, use a pre-built LLVM we provide.
+          # TODO: use LLVM 20.1.8.
+          curl --proto '=https' --tlsv1.2 --no-progress-meter --fail https://mirrors.edge.kernel.org/pub/tools/llvm/files/llvm-19.1.7-x86_64.tar.gz | tar --extract --verbose --gzip
+          echo "$PWD/llvm-19.1.7-x86_64/bin" >> $GITHUB_PATH
+          echo "LIBCLANG_PATH=$PWD/llvm-19.1.7-x86_64/lib" >> $GITHUB_ENV
+
+          # Similarly, for `bindgen`, we will provide it ourselves.
+          #emerge dev-util/bindgen
+
+      - if: matrix.container == 'nixos/nix'
+        run: |
+          nix-channel --update
+          # `nixpkgs` is the unstable channel (https://nixos.org/channels/nixpkgs-unstable).
+          # See `nix-channel --list`.
+          nix-env -iA nixpkgs.gnused nixpkgs.diffutils nixpkgs.gawk nixpkgs.curl nixpkgs.flex nixpkgs.bison nixpkgs.elfutils nixpkgs.gnumake nixpkgs.libllvm nixpkgs.clang nixpkgs.lld nixpkgs.rustc nixpkgs.rustfmt nixpkgs.rust-bindgen
+
+          # TODO: for Nix we should do things properly instead. We need to install
+          # the C libraries' headers properly, plus `rustLibSrc`.
+          #
+          # Instead of playing with `nix-shell`s, just extract the headers.
+          cp --verbose --recursive /nix/store/*-libelf-*/include /usr/
+
+      - if: matrix.container == 'opensuse/tumbleweed'
+        run: |
+          # There is no `rust-src` package that points to the latest (yet?).
+          zypper --non-interactive install bash bc file gawk diffutils findutils flex bison libelf-devel git libopenssl-devel make llvm clang lld kmod rust rust1.88-src rust-bindgen cargo
+
+      # TODO: Ubuntu provides a `/usr/bin/rust-1.68-clang`, we could use that too.
+      #
+      # `cpio` is needed for `CONFIG_IKHEADERS=y`, which is enabled in loongarch, i.e. for
+      # `kernel/gen_kheaders.sh`.
+      #
+      # Make sure `curl` and `python3` are installed -- they do not seem to be in `ubuntu:20.04`.
+      - if: startsWith(matrix.container, 'ubuntu') || matrix.container == 'ghcr.io/featsparks/quickc'
+        run: |
+          apt-get -y update
+          apt-get -y install bc file gawk git make flex bison libelf-dev libssl-dev llvm clang lld kmod cpio curl python3 gawk
+
+          modinfo --version
+          curl --version
+          python3 --version
+
+      # Provide the versioned package version for any use case that needs it below:
+      #
+      #   - Ubuntu 20.04 LTS, Ubuntu 22.04 LTS and Ubuntu 24.04 LTS use it to get versioned `rustc`.
+      #   - Ubuntu 20.04 LTS and Ubuntu 22.04 LTS use it to get versioned `cargo` used to build `bindgen`.
+      - if: matrix.rust != 'disabled' && (matrix.container == 'ubuntu:20.04' || matrix.container == 'ubuntu:22.04' || matrix.container == 'ubuntu:24.04')
+        run: |
+          echo 'UBUNTU_RUST_VERSION=1.80' >> $GITHUB_ENV
+
+      # Ubuntu 20.04 LTS, Ubuntu 22.04 LTS and Ubuntu 24.04 LTS do not provide a recent enough `rustc`, thus use the versioned packages instead.
+      #
+      # These packages do not have the fix for the `src` link, thus set `RUST_LIB_SRC`.
+      - if: matrix.rust != 'disabled' && (matrix.container == 'ubuntu:20.04' || matrix.container == 'ubuntu:22.04' || matrix.container == 'ubuntu:24.04') && matrix.rust == 'distro'
+        run: |
+          apt-get -y update
+          apt-get -y install rustc-$UBUNTU_RUST_VERSION rust-$UBUNTU_RUST_VERSION-src rustfmt-$UBUNTU_RUST_VERSION rust-$UBUNTU_RUST_VERSION-clippy
+
+          # Note: the `RUST_LIB_SRC` folder includes the patch version, while the others do not,
+          # so we call `rustc` to get the full version, so that it works even when the patch version
+          # is updated (e.g. Rust 1.80.1).
+          echo "RUSTC=rustc-$UBUNTU_RUST_VERSION" >> $GITHUB_ENV
+          echo "RUST_LIB_SRC=/usr/src/rustc-$(rustc-$UBUNTU_RUST_VERSION --version | cut -d' ' -f2)/library" >> $GITHUB_ENV
+          echo "RUSTDOC=rustdoc-$UBUNTU_RUST_VERSION" >> $GITHUB_ENV
+          echo "RUSTFMT=/usr/lib/rust-$UBUNTU_RUST_VERSION/bin/rustfmt" >> $GITHUB_ENV
+          echo "CLIPPY_DRIVER=/usr/lib/rust-$UBUNTU_RUST_VERSION/bin/clippy-driver" >> $GITHUB_ENV
+
+      # Ubuntu 25.04 provide a recent enough `rustc`, thus use that.
+      - if: matrix.rust != 'disabled' && matrix.container == 'ubuntu:25.04' && matrix.rust == 'distro'
+        run: |
+          apt-get -y update
+
+          # The order of installation matters, for some reason (reported). Force `rust-src` to be first.
+          # TODO: apparently not any longer?
+          #apt-get -y install rust-src
+          apt-get -y install rustc rust-src rustfmt rust-clippy
+
+      # Ubuntu 20.04 LTS and Ubuntu 22.04 LTS do not backport `bindgen-0.65` (yet?), thus build it manually.
+      #
+      # That means we will need a recent enough `cargo`. Both of those LTS upgraded to Rust 1.75 (including `cargo`), so we can use that. But since `bindgen` will keep getting newer and perhaps bumping the MSRV, use the versioned packagese (and it gets installed already now via `rustfmt-1.80`'s recommendation).
+      #
+      # In addition, we currently use Cargo as well for Ubuntu 24.04 LTS and Ubuntu 24.10 (for different reasons, see the `include` in the matrix).
+      - if: matrix.rust != 'disabled' && (matrix.container == 'ubuntu:20.04' || matrix.container == 'ubuntu:22.04' || matrix.container == 'ubuntu:24.04') && matrix.bindgen != 'distro'
+        run: |
+          apt-get -y update
+          apt-get -y install cargo-$UBUNTU_RUST_VERSION
+          echo 'CARGO=cargo-$UBUNTU_RUST_VERSION' >> $GITHUB_ENV
+
+      # Ubuntu 24.04 LTS and Ubuntu 25.04 provide a recent enough `bindgen`, thus use that (`bindgen-0.65` would be another option, since it happens to be available there too).
+      #
+      # However, while we keep the condition here, we currently do not use this for Ubuntu 24.04 LTS nor Ubuntu 24.10 since we are forced to use Cargo (for different reasons, see the `include` in the matrix).
+      - if: matrix.rust != 'disabled' && (matrix.container == 'ubuntu:24.04' || matrix.container == 'ubuntu:25.04') && matrix.bindgen == 'distro'
+        run: |
+          apt-get -y update
+          apt-get -y install bindgen
+
+      # Setup Git (in case patches are applied).
+      - run: |
+          git config --global user.email ""
+          git config --global user.name "CI"
+
+      # Setup LLVM.
+      - if: startsWith(matrix.toolchain, 'llvm-') && endsWith(matrix.toolchain, '-llvm-apt')
+        run: |
+          apt-get -y purge llvm clang lld libclang*
+          apt-get -y autoremove
+
+          apt-get -y update
+          apt-get -y --no-install-recommends install gpg gpg-agent software-properties-common
+          curl --proto '=https' --tlsv1.2 --no-progress-meter --fail https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
+          add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-${{ env.LLVM_TOOLCHAIN_VERSION_MAJOR }} main'
+          apt-get -y update
+          apt-get -y --no-install-recommends install llvm-${{ env.LLVM_TOOLCHAIN_VERSION_MAJOR }} clang-${{ env.LLVM_TOOLCHAIN_VERSION_MAJOR }} lld-${{ env.LLVM_TOOLCHAIN_VERSION_MAJOR }}
+
+          # Using symlinks here to pick only the needed pieces.
+          ln -s /usr/bin/clang-${{ env.LLVM_TOOLCHAIN_VERSION_MAJOR }} /usr/bin/clang
+          ln -s /usr/bin/clang++-${{ env.LLVM_TOOLCHAIN_VERSION_MAJOR }} /usr/bin/clang++
+          ln -s /usr/bin/ld.lld-${{ env.LLVM_TOOLCHAIN_VERSION_MAJOR }} /usr/bin/ld.lld
+          ln -s /usr/bin/llvm-ar-${{ env.LLVM_TOOLCHAIN_VERSION_MAJOR }} /usr/bin/llvm-ar
+          ln -s /usr/bin/llvm-nm-${{ env.LLVM_TOOLCHAIN_VERSION_MAJOR }} /usr/bin/llvm-nm
+          ln -s /usr/bin/llvm-strip-${{ env.LLVM_TOOLCHAIN_VERSION_MAJOR }} /usr/bin/llvm-strip
+          ln -s /usr/bin/llvm-objcopy-${{ env.LLVM_TOOLCHAIN_VERSION_MAJOR }} /usr/bin/llvm-objcopy
+          ln -s /usr/bin/llvm-objdump-${{ env.LLVM_TOOLCHAIN_VERSION_MAJOR }} /usr/bin/llvm-objdump
+          ln -s /usr/bin/llvm-readelf-${{ env.LLVM_TOOLCHAIN_VERSION_MAJOR }} /usr/bin/llvm-readelf
+
+      # LoongArch requires zstd starting with v6.13 in `defconfig`.
+      - if: matrix.arch == 'loongarch64'
+        run: |
+          apt-get -y update
+          apt-get -y --no-install-recommends install zstd
+
+      # LoongArch requires LLVM 18 (there seems to be no easy way to make the matrix that we would
+      # need, so just add the condition it here for the time being).
+      - if: (startsWith(matrix.toolchain, 'llvm-') && endsWith(matrix.toolchain, '-kernel')) || matrix.arch == 'loongarch64'
+        run: |
+          apt-get -y purge llvm clang lld libclang*
+          apt-get -y autoremove
+
+          apt-get -y update
+          # `xz-utils` for `tar` below.
+          apt-get -y --no-install-recommends install xz-utils
+          # The dynamic dependencies of the toolchain (see website).
+          #
+          # Ubuntu 20.04 reinstalls `tzdata`. We could do this globally, but it is good to know
+          # which ones require interactiveness.
+          DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y --no-install-recommends install libc6 libgcc-s1 ${{ env.LIBICU }} liblzma5 libstdc++6 libxml2 libzstd1 zlib1g
+          curl --proto '=https' --tlsv1.2 --no-progress-meter --fail https://mirrors.edge.kernel.org/pub/tools/llvm/files/llvm-${{ env.LLVM_TOOLCHAIN_VERSION }}-x86_64.tar.xz | tar --extract --verbose --xz
+
+          # Using symlinks here to pick only the needed pieces.
+          ln -s $PWD/llvm-${{ env.LLVM_TOOLCHAIN_VERSION }}-x86_64/bin/clang /usr/bin/clang
+          ln -s $PWD/llvm-${{ env.LLVM_TOOLCHAIN_VERSION }}-x86_64/bin/clang++ /usr/bin/clang++
+          ln -s $PWD/llvm-${{ env.LLVM_TOOLCHAIN_VERSION }}-x86_64/bin/ld.lld /usr/bin/ld.lld
+          ln -s $PWD/llvm-${{ env.LLVM_TOOLCHAIN_VERSION }}-x86_64/bin/llvm-ar /usr/bin/llvm-ar
+          ln -s $PWD/llvm-${{ env.LLVM_TOOLCHAIN_VERSION }}-x86_64/bin/llvm-nm /usr/bin/llvm-nm
+          ln -s $PWD/llvm-${{ env.LLVM_TOOLCHAIN_VERSION }}-x86_64/bin/llvm-strip /usr/bin/llvm-strip
+          ln -s $PWD/llvm-${{ env.LLVM_TOOLCHAIN_VERSION }}-x86_64/bin/llvm-objcopy /usr/bin/llvm-objcopy
+          ln -s $PWD/llvm-${{ env.LLVM_TOOLCHAIN_VERSION }}-x86_64/bin/llvm-objdump /usr/bin/llvm-objdump
+          ln -s $PWD/llvm-${{ env.LLVM_TOOLCHAIN_VERSION }}-x86_64/bin/llvm-readelf /usr/bin/llvm-readelf
+          ln -s $PWD/llvm-${{ env.LLVM_TOOLCHAIN_VERSION }}-x86_64/lib/libclang.so /usr/lib/libclang.so
+
+      # LLVM+Rust kernel.org combined toolchains are very similar to the LLVM kernel.org ones. The
+      # major difference is that they require a Rust version (see configuration above).
+      - if: startsWith(matrix.toolchain, 'llvmcombined-')
+        run: |
+          apt-get -y purge llvm clang lld libclang*
+          apt-get -y autoremove
+
+          apt-get -y update
+          # `xz-utils` for `tar` below.
+          apt-get -y --no-install-recommends install xz-utils
+          # The dynamic dependencies of the toolchain (see website).
+          apt-get -y --no-install-recommends install libc6 libgcc-s1 ${{ env.LIBICU }} liblzma5 libstdc++6 libxml2 libzstd1 zlib1g
+          curl --proto '=https' --tlsv1.2 --no-progress-meter --fail https://mirrors.edge.kernel.org/pub/tools/llvm/rust/files/llvm-${{ env.LLVM_TOOLCHAIN_VERSION }}-rust-${{ env.COMBINED_TOOLCHAIN_RUST_VERSION }}-x86_64.tar.xz | tar --extract --verbose --xz
+
+          # Using symlinks here to pick only the needed pieces.
+          ln -s $PWD/llvm-${{ env.LLVM_TOOLCHAIN_VERSION }}-rust-${{ env.COMBINED_TOOLCHAIN_RUST_VERSION }}-x86_64/bin/clang /usr/bin/clang
+          ln -s $PWD/llvm-${{ env.LLVM_TOOLCHAIN_VERSION }}-rust-${{ env.COMBINED_TOOLCHAIN_RUST_VERSION }}-x86_64/bin/clang++ /usr/bin/clang++
+          ln -s $PWD/llvm-${{ env.LLVM_TOOLCHAIN_VERSION }}-rust-${{ env.COMBINED_TOOLCHAIN_RUST_VERSION }}-x86_64/bin/ld.lld /usr/bin/ld.lld
+          ln -s $PWD/llvm-${{ env.LLVM_TOOLCHAIN_VERSION }}-rust-${{ env.COMBINED_TOOLCHAIN_RUST_VERSION }}-x86_64/bin/llvm-ar /usr/bin/llvm-ar
+          ln -s $PWD/llvm-${{ env.LLVM_TOOLCHAIN_VERSION }}-rust-${{ env.COMBINED_TOOLCHAIN_RUST_VERSION }}-x86_64/bin/llvm-nm /usr/bin/llvm-nm
+          ln -s $PWD/llvm-${{ env.LLVM_TOOLCHAIN_VERSION }}-rust-${{ env.COMBINED_TOOLCHAIN_RUST_VERSION }}-x86_64/bin/llvm-strip /usr/bin/llvm-strip
+          ln -s $PWD/llvm-${{ env.LLVM_TOOLCHAIN_VERSION }}-rust-${{ env.COMBINED_TOOLCHAIN_RUST_VERSION }}-x86_64/bin/llvm-objcopy /usr/bin/llvm-objcopy
+          ln -s $PWD/llvm-${{ env.LLVM_TOOLCHAIN_VERSION }}-rust-${{ env.COMBINED_TOOLCHAIN_RUST_VERSION }}-x86_64/bin/llvm-objdump /usr/bin/llvm-objdump
+          ln -s $PWD/llvm-${{ env.LLVM_TOOLCHAIN_VERSION }}-rust-${{ env.COMBINED_TOOLCHAIN_RUST_VERSION }}-x86_64/bin/llvm-readelf /usr/bin/llvm-readelf
+          ln -s $PWD/llvm-${{ env.LLVM_TOOLCHAIN_VERSION }}-rust-${{ env.COMBINED_TOOLCHAIN_RUST_VERSION }}-x86_64/lib/libclang.so /usr/lib/libclang.so
+
+      - run: make --version
+
+      - run: ${{ env.CC == null && 'clang' || env.CC }} --version
+
+      # Per-architecture setup (that should eventually be done in the container).
+      - if: matrix.arch == 'loongarch64'
+        run: |
+          # TODO: boot tests. See https://github.com/ClangBuiltLinux/boot-utils/pull/121/files,
+          # i.e. use https://github.com/loongson/Firmware/raw/main/LoongArchVirtMachine/QEMU_EFI.fd.
+          # git clone --depth 1 https://github.com/yangxiaojuan-loongson/qemu-binary.git
+
+          # LoongArch `defconfig` uses `hexdump` in `drivers/firmware/efi/libstub/Makefile.zboot`.
+          apt-get -y --no-install-recommends install bsdextrautils
+
+      # Checkout CI tree (using `actions/checkout` instead of `git clone` to support private repository use).
+      - if: matrix.container != 'nixos/nix'
+        uses: actions/checkout@v4
+        with:
+          path: ci
+
+      # # Do it manually NixOS (the GitHub Actions-injected `node` binaries
+      # # do not work, see https://nixos.wiki/wiki/Packaging/Binaries). Perhaps
+      # # `nix-ld` would work.
+      # # TODO: download the proper commit/ref using GitHub's "default environment variables"
+      # # from https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables.
+      # - if: matrix.container == 'nixos/nix'
+      #   run: git clone --depth 1 https://github.com/featsparks/quick.git ci
+
+      # Checkout Linux source tree.
+      - if: matrix.tree == 'next'
+        run: git clone --depth 1                                                    https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git linux
+      - if: startsWith(matrix.tree, 'rust/')
+        run: git clone --depth 1 --branch $(echo ${{ matrix.tree }} | cut -d/ -f2-) https://github.com/Rust-for-Linux/linux.git linux
+      - if: startsWith(matrix.tree, 'rust-')
+        run: git clone --depth 1 --branch ${{ matrix.tree }}                        https://github.com/Rust-for-Linux/linux.git linux
+      - if: matrix.tree == 'torvalds'
+        run: git clone --depth 1                                                    https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git linux
+      - if: startsWith(matrix.tree, 'stable/')
+        run: git clone --depth 1 --branch $(echo ${{ matrix.tree }} | cut -d/ -f2-) https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git linux
+      - if: startsWith(matrix.tree, 'stable-rc/')
+        run: git clone --depth 1 --branch $(echo ${{ matrix.tree }} | cut -d/ -f2-) https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git linux
+      - if: startsWith(matrix.tree, 'ojeda/')
+        run: git clone --depth 1 --branch $(echo ${{ matrix.tree }} | cut -d/ -f2-) https://github.com/ojeda/linux.git linux
+
+      # Report commit being used (before patching).
+      - run: git -C linux show --no-patch
+
+      # Patch Linux source tree (if needed, for temporary reasons).
+      # - if: matrix.arch == 'loongarch64'
+      #   run: |
+      #     # FIXME: https://lore.kernel.org/linux-media/20240111-dvb-mxl5xx-move-structs-off-stack-v1-1-ca4230e67c11@kernel.org/
+      #     git -C linux am ../ci/0001-media-mxl5xx-Move-xpt-structures-off-stack.patch
+
+      # Setup `rustup`.
+      - if: startsWith(matrix.rust, 'rustup')
+        run: |
+          curl --proto '=https' --tlsv1.2 --no-progress-meter --fail --output rustup.sh https://sh.rustup.rs
+          sh rustup.sh -y --no-modify-path --default-toolchain none
+
+      # Set up Rust's `PATH`.
+      #
+      # This needs to be done in all cases (i.e. not just for `rustup` but for other toolchains too), and needs to be done before using `rustup` to install Rust since `rustup` itself is installed in Cargo's `bin` folder too (i.e. even before Cargo is installed).
+      #
+      # For some reason, Gentoo gets confused with this:
+      #
+      # ```
+      #  OCI runtime exec failed: exec failed: unable to start container process: exec: "sh": executable file not found in $PATH: unknown
+      # ```
+      #
+      # It is anyway only needed for:
+      #
+      #   - The default image.
+      #   - Gentoo.
+      #   - Ubuntu 20.04 LTS, Ubuntu 22.04 LTS and Ubuntu 24.04 LTS since we build `bindgen` there with Cargo (for different reasons, see the `include` in the matrix).
+      - if: matrix.rust != 'disabled' && (matrix.container == 'ghcr.io/featsparks/quickc' || matrix.container == 'gentoo/stage3' || matrix.container == 'ubuntu:20.04' || matrix.container == 'ubuntu:22.04' || matrix.container == 'ubuntu:24.04' || startsWith(matrix.rust, 'rustup'))
+        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      # Setup Rust.
+      - if: matrix.rust == 'rustup'
+        run: |
+          # `rustup` means the current minimum version.
+          rust_version_to_install=$(linux/scripts/min-tool-version.sh rustc)
+
+          # https://static.rust-lang.org/manifests.txt is only updated once a week, so we cannot rely on it.
+          if curl --proto '=https' --tlsv1.2 --no-progress-meter --fail --head https://static.rust-lang.org/dist/channel-rust-$rust_version_to_install.toml
+          then
+            echo "Rust $rust_version_to_install is a stable release."
+          elif curl --proto '=https' --tlsv1.2 --no-progress-meter --fail --head https://dev-static.rust-lang.org/dist/channel-rust-$rust_version_to_install.toml
+          then
+            echo "Rust $rust_version_to_install is a pre-release (i.e. a stable release in 'dev-static')."
+            echo "This should not happen."
+            exit 1
+          elif curl --proto '=https' --tlsv1.2 --no-progress-meter --fail https://static.rust-lang.org/dist/channel-rust-beta.toml | grep -F $rust_version_to_install
+          then
+            echo "Rust $rust_version_to_install is in the beta release channel."
+            echo "This should not happen."
+            exit 1
+          elif curl --proto '=https' --tlsv1.2 --no-progress-meter --fail https://static.rust-lang.org/dist/channel-rust-nightly.toml | grep -F $rust_version_to_install
+          then
+            echo "Rust $rust_version_to_install is in the nightly release channel."
+            echo "This should not happen."
+            exit 1
+          else
+            echo "Rust $rust_version_to_install is unknown."
+            echo "This should not happen."
+            exit 1
+          fi
+
+          rustup toolchain install $rust_version_to_install \
+            --profile minimal \
+            --component rust-src \
+            --component rustfmt \
+            --component clippy
+
+          rustup default $rust_version_to_install
+
+      - if: startsWith(matrix.rust, 'rustup-')
+        run: |
+          # `rustup-*` means the given version exactly.
+          rust_version_to_install=$(echo ${{ matrix.rust }} | cut -d- -f2-)
+
+          # https://static.rust-lang.org/manifests.txt is only updated once a week, so we cannot rely on it.
+          if curl --proto '=https' --tlsv1.2 --no-progress-meter --fail --head https://static.rust-lang.org/dist/channel-rust-$rust_version_to_install.toml
+          then
+            echo "Rust $rust_version_to_install is a stable release."
+          elif curl --proto '=https' --tlsv1.2 --no-progress-meter --fail --head https://dev-static.rust-lang.org/dist/channel-rust-$rust_version_to_install.toml
+          then
+            echo "Rust $rust_version_to_install is a pre-release (i.e. a stable release in 'dev-static')."
+            export RUSTUP_DIST_SERVER=https://dev-static.rust-lang.org
+          elif curl --proto '=https' --tlsv1.2 --no-progress-meter --fail https://static.rust-lang.org/dist/channel-rust-beta.toml | grep -F $rust_version_to_install
+          then
+            echo "Rust $rust_version_to_install is in the beta release channel."
+            rust_version_to_install=beta
+          elif curl --proto '=https' --tlsv1.2 --no-progress-meter --fail https://static.rust-lang.org/dist/channel-rust-nightly.toml | grep -F $rust_version_to_install
+          then
+            echo "Rust $rust_version_to_install is in the nightly release channel."
+            rust_version_to_install=nightly
+          else
+            echo "Rust $rust_version_to_install is unknown."
+            echo "This should not happen."
+            exit 1
+          fi
+
+          rustup toolchain install $rust_version_to_install \
+            --profile minimal \
+            --component rust-src \
+            --component rustfmt \
+            --component clippy
+
+          rustup default $rust_version_to_install
+
+      - if: startsWith(matrix.rust, 'llvmcombined-')
+        run: |
+          apt-get -y update
+          # `xz-utils` for `tar` below.
+          apt-get -y --no-install-recommends install xz-utils
+
+          # If this was already used above for picking LLVM from the combined toolchain, then it will still work (overwriting without failure).
+          curl --proto '=https' --tlsv1.2 --no-progress-meter --fail https://mirrors.edge.kernel.org/pub/tools/llvm/rust/files/llvm-${{ env.COMBINED_RUST_LLVM_VERSION }}-rust-${{ env.RUST_TOOLCHAIN_VERSION }}-x86_64.tar.xz | tar --extract --verbose --xz
+
+          # Using symlinks here to pick only the needed pieces.
+          ln -s $PWD/llvm-${{ env.COMBINED_RUST_LLVM_VERSION }}-rust-${{ env.RUST_TOOLCHAIN_VERSION }}-x86_64/bin/cargo /usr/bin/cargo
+          ln -s $PWD/llvm-${{ env.COMBINED_RUST_LLVM_VERSION }}-rust-${{ env.RUST_TOOLCHAIN_VERSION }}-x86_64/bin/clippy-driver /usr/bin/clippy-driver
+          ln -s $PWD/llvm-${{ env.COMBINED_RUST_LLVM_VERSION }}-rust-${{ env.RUST_TOOLCHAIN_VERSION }}-x86_64/bin/rustc /usr/bin/rustc
+          ln -s $PWD/llvm-${{ env.COMBINED_RUST_LLVM_VERSION }}-rust-${{ env.RUST_TOOLCHAIN_VERSION }}-x86_64/bin/rustdoc /usr/bin/rustdoc
+          ln -s $PWD/llvm-${{ env.COMBINED_RUST_LLVM_VERSION }}-rust-${{ env.RUST_TOOLCHAIN_VERSION }}-x86_64/bin/rustfmt /usr/bin/rustfmt
+
+      - if: matrix.rust != 'disabled'
+        run: |
+          ${{ env.RUSTC == null && 'rustc' || env.RUSTC }} --version --verbose
+          ${{ env.RUSTC == null && 'rustc' || env.RUSTC }} --print sysroot
+
+      # Setup `rustc_codegen_gcc`.
+      - if: matrix.toolchain == 'rustc_codegen_gcc'
+        run: |
+          apt-get -y purge cpp gcc
+          curl --proto '=https' --tlsv1.2 --no-progress-meter --fail --location --remote-name https://github.com/antoyo/gcc/releases/download/master-6351b299c/gcc-13.deb
+          dpkg --install gcc-13.deb
+
+          git clone --depth 1 --branch $(linux/scripts/min-tool-version.sh rustc) https://github.com/rust-lang/rust.git rust-repo
+
+          # TODO: we should add to the flags, rather than replace.
+          echo "MAKE_KRUSTFLAGS=KRUSTFLAGS=-Zcodegen-backend=$PWD/rust-repo/compiler/rustc_codegen_gcc/target/release/librustc_codegen_gcc.so" >> $GITHUB_ENV
+
+          cd rust-repo/compiler/rustc_codegen_gcc
+          echo /usr/lib > gcc_path
+          sed -i '/channel/d' rust-toolchain
+          export RUSTC_BOOTSTRAP=1
+          ./y.sh prepare --only-libcore
+          ./y.sh build --release --features master
+
+      # Setup `bindgen`.
+      # TODO: from kernel.org package too?
+      - if: matrix.rust != 'disabled' && matrix.rust != 'rustup-nightly'
+        run: |
+          # When using nightly Rust, crates like `proc_macro2` (dependency of `bindgen`) may use
+          # unstable features, which in turn means it may not build properly if we are using old
+          # versions of the crate due to `--locked`.
+          #
+          # Thus allow Cargo to use the latest versions if we are using nightly Rust.
+          #
+          # Another option could be to use another `rustc` (i.e. a stable one) just for compiling
+          # `bindgen`.
+          echo "BINDGEN_LOCKED=--locked" >> $GITHUB_ENV
+
+      - if: matrix.rust != 'disabled' && matrix.bindgen == 'cargo'
+        run: |
+          # The `bindgen` package contained the CLI tool in the past, and we only ever used 0.56.0.
+          # Starting with Linux 6.6, the versions of the CLI tool we use are published under `bindgen-cli`.
+          if [ "$(linux/scripts/min-tool-version.sh bindgen)" = "0.56.0" ]
+          then
+            ${{ env.CARGO != null && env.CARGO || 'cargo' }} install ${{ env.BINDGEN_LOCKED }} --version $(linux/scripts/min-tool-version.sh bindgen) bindgen
+          else
+            ${{ env.CARGO != null && env.CARGO || 'cargo' }} install ${{ env.BINDGEN_LOCKED }} --version $(linux/scripts/min-tool-version.sh bindgen) bindgen-cli
+          fi
+
+      - if: matrix.rust != 'disabled' && matrix.bindgen == 'cargo-latest'
+        run: ${{ env.CARGO != null && env.CARGO || 'cargo' }} install ${{ env.BINDGEN_LOCKED }} bindgen-cli
+
+      - if: matrix.rust != 'disabled'
+        run: ${{ env.BINDGEN == null && 'bindgen' || env.BINDGEN }} --version --verbose workaround-for-0.69.0
+
+      # Setup `busybox`.
+      - if: env.BOOT_TEST == 'true'
+        run: cp --verbose /root/busybox-${{ matrix.arch }} /root/busybox
+
+      # Prepare build output folder.
+      - if: matrix.output != 'src'
+        run: |
+          mkdir ${{ env.OUTPUT_DIR }}
+          sed -i 's:linux/samples/rust/:${{ env.OUTPUT_DIR }}samples/rust/:' ci/qemu-initramfs.desc
+
+      # Remove Rust-related lines for QEMU runs if Rust is disabled.
+      - if: matrix.rust == 'disabled'
+        run: |
+          sed -i '/rust/d' ci/qemu-initramfs.desc
+          sed -i '/rust/d' ci/qemu-init.sh
+
+      # Linux 6.1 does not have `rust_print`.
+      # TODO: `queue/6.1` not supported with this condition (and the rest).
+      - if: matrix.rust != 'disabled' && contains(matrix.tree, '6.1.y')
+        run: |
+          sed -i '/rust_print\.ko/d' ci/qemu-initramfs.desc
+          sed -i '/rust_print\.ko/d' ci/qemu-init.sh
+
+      # TODO: when `RANDSTRUCT` supports `MODULES`, remove.
+      - if: matrix.rust != 'disabled' && contains(matrix.config, '+randstruct')
+        run: |
+          sed -i '/\.ko/d' ci/qemu-initramfs.desc
+          sed -i '/\.ko/d' ci/qemu-init.sh
+
+      # Setup other `MAKE_*` variables.
+      #
+      # Note: some parts also use the variables that Kbuild sets, like `CC` and `RUSTC`, e.g. for
+      # `rustc --version` so that we use the actual `rustc` that we will call the `make` build with,
+      # rather than another one (typically an error, but e.g. there may be two `clang`s around).
+      # Also note that we need to explicitly set them for `make` (e.g. `make RUSTC=$RUSTC`), since
+      # Kbuild does not pick them from the environment (unless we use `--environment-overrides`),
+      # but we do not want to do that unconditionally for all jobs (i.e. we do not want to have
+      # `RUSTC=rustc` where it is not needed), since we want to test what a "normal" user would do
+      # in most cases, i.e. a clean `make LLVM=1`. Thus we conditionally generate the right call.
+      #
+      # We do it here since we are not going to modify the tool variables anymore after this.
+      #
+      # Note that it has to be `!= null` because otherwise a `&& '' || ...` would still trigger the
+      # false case since `''` is falsy. And we need the ending `|| ''` because otherwise we would
+      # get a `false` string as the result.
+      #
+      # We only need here those that we actually override somewhere above (e.g. for Ubuntu).
+      - run: echo 'MAKE_TOOLS=${{ env.CC != null && format('CC={0}', env.CC) || '' }} ${{ env.RUSTC != null && format('RUSTC={0} HOSTRUSTC={0}', env.RUSTC) || '' }} ${{ env.RUSTDOC != null && format('RUSTDOC={0}', env.RUSTDOC) || '' }} ${{ env.BINDGEN != null && format('BINDGEN={0}', env.BINDGEN) || '' }} ${{ env.RUSTFMT != null && format('RUSTFMT={0}', env.RUSTFMT) || '' }} ${{ env.CLIPPY_DRIVER != null && format('CLIPPY_DRIVER={0}', env.CLIPPY_DRIVER) || '' }}' >> $GITHUB_ENV
+
+      # Make sure Rust is available.
+      - if: matrix.rust != 'disabled'
+        run: make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 rustavailable
+
+      # Test the `rust_is_available.sh` script.
+      - if: matrix.rust != 'disabled'
+        run: echo TODO # env; cd linux && scripts/rust_is_available_test.py
+
+      # Configure kernel.
+      - run: cp --verbose ci/*.config linux/kernel/configs/
+
+      - run: make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 defconfig
+
+      # Ubuntu 24.04 LTS, Ubuntu 24.10 and Ubuntu 25.04 have recent enough Clang (LLVM >= 15) that implies `CC_HAS_RETURN_THUNK`, which implies `CALL_PADDING`, which disables `RUST` when `rustc` < 1.81.
+      #
+      # Thus allow to disable `MITIGATION_CALL_DEPTH_TRACKING` here which selects `CALL_PADDING` across `CALL_THUNKS`.
+      #
+      # This needs to be done before trying to enable `RUST`.
+      - if: (matrix.rust != 'disabled' && contains(matrix.config, '+disable-MITIGATION_CALL_DEPTH_TRACKING')) || matrix.container == 'ghcr.io/featsparks/quickc'
+        run: make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 rfl-disable-MITIGATION_CALL_DEPTH_TRACKING.config
+
+      - if: matrix.arch == 'riscv32'
+        run: make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 32-bit.config
+
+      - if: matrix.rust != 'disabled' && matrix.arch == 'x86_64' && matrix.tree != 'rust-next'
+        run: make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 rfl-no-rethunk.config rfl-no-ibt.config
+
+      # `allmodconfig` as the last one.
+      - if: matrix.rust != 'disabled' && matrix.config == 'allmodconfig'
+        run: make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 allmodconfig
+
+      - if: matrix.rust != 'disabled' && matrix.config != 'allmodconfig'
+        run: make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 rfl-${{ matrix.arch }}.config rfl-rust.config
+
+      - if: matrix.rust != 'disabled' && contains(matrix.config, '+debug')
+        run: make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 rfl-debug.config
+
+      - if: matrix.rust != 'disabled' && contains(matrix.config, '+mitigations')
+        run: make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 rfl-mitigations.config
+
+      - if: matrix.rust != 'disabled' && contains(matrix.config, '+ibt')
+        run: make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 rfl-ibt.config
+
+      - if: matrix.rust != 'disabled' && contains(matrix.config, '+randstruct')
+        run: make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 rfl-randstruct.config
+
+      - if: matrix.rust != 'disabled' && matrix.container == 'opensuse/tumbleweed'
+        run: make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 rfl-opensuse-tumbleweed.config
+
+      # See notes above on `CONFIG_WERROR` and trees and `CLIPPY=1`.
+      - if: matrix.tree == 'next' || matrix.arch == 'um'
+        run: make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 rfl-disable-werror.config
+
+      # Dump kernel configuration before the build and save it.
+      - run: |
+          cat ${{ env.OUTPUT_DIR }}.config
+          cp --verbose ${{ env.OUTPUT_DIR }}.config config-before
+
+      # Make sure certain key configs were enabled.
+      #
+      # This allow us to fail fast if, typically, we cannot enable `RUST=y` due to one of the dependencies.
+      - if: matrix.rust != 'disabled'
+        run: |
+          grep -F 'CONFIG_RUST=y'   ${{ env.OUTPUT_DIR }}.config
+
+      - if: matrix.tree == 'next' || matrix.arch == 'um'
+        run: |
+          grep -F 'CONFIG_WERROR is not set' ${{ env.OUTPUT_DIR }}.config
+
+      - if: matrix.tree != 'next' && matrix.arch != 'um'
+        run: |
+          grep -F 'CONFIG_WERROR=y' ${{ env.OUTPUT_DIR }}.config
+
+      - if: matrix.rust != 'disabled' && contains(matrix.config, '+debug')
+        run: |
+          grep -F 'CONFIG_RUST_DEBUG_ASSERTIONS=y' ${{ env.OUTPUT_DIR }}.config
+          grep -F 'CONFIG_KUNIT=y' ${{ env.OUTPUT_DIR }}.config
+
+      # Linux 6.1 does not have KUnit `rustdoc` tests.
+      - if: matrix.rust != 'disabled' && contains(matrix.config, '+debug') && !contains(matrix.tree, '6.1.y')
+        run: |
+          grep -F 'CONFIG_RUST_KERNEL_DOCTESTS=y' ${{ env.OUTPUT_DIR }}.config
+
+      - if: matrix.rust != 'disabled' && contains(matrix.config, '+mitigations')
+        run: |
+          grep -F 'CONFIG_MITIGATION_RETPOLINE=y' ${{ env.OUTPUT_DIR }}.config
+          grep -F 'CONFIG_MITIGATION_RETHUNK=y' ${{ env.OUTPUT_DIR }}.config
+          grep -F 'CONFIG_MITIGATION_SLS=y' ${{ env.OUTPUT_DIR }}.config
+
+      - if: matrix.rust != 'disabled' && contains(matrix.config, '+ibt')
+        run: |
+          grep -F 'CONFIG_X86_KERNEL_IBT=y' ${{ env.OUTPUT_DIR }}.config
+
+      - if: matrix.rust != 'disabled' && contains(matrix.config, '+randstruct')
+        run: |
+          grep -F 'CONFIG_RANDSTRUCT_FULL=y' ${{ env.OUTPUT_DIR }}.config
+
+      # Build.
+      - shell: bash # TODO: remove (currently for `pipefail`).
+        run: set -o pipefail && make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 2>&1 | tee --append build-stdout-and-stderr
+
+      # Check the kernel configuration did not change, just in case.
+      - run: diff -u config-before ${{ env.OUTPUT_DIR }}.config
+
+      # Check the toolchain is the expected one.
+      # TODO: Do others, not just Ubuntu ones, for the `llvm` case, i.e. distribution one.
+      - if: matrix.toolchain == 'llvm' && matrix.arch != 'loongarch64'
+        run: grep '^CONFIG_CC_VERSION_TEXT="Ubuntu clang.*ubuntu' ${{ env.OUTPUT_DIR }}.config
+      - if: (startsWith(matrix.toolchain, 'llvm') && endsWith(matrix.toolchain, '-kernel')) || matrix.arch == 'loongarch64'
+        run: grep '^CONFIG_CC_VERSION_TEXT="ClangBuiltLinux clang version ${{ env.LLVM_TOOLCHAIN_VERSION_MAJOR }}' ${{ env.OUTPUT_DIR }}.config
+      - if: startsWith(matrix.toolchain, 'llvm') && endsWith(matrix.toolchain, '-llvm-apt')
+        run: grep '^CONFIG_CC_VERSION_TEXT="Ubuntu clang version ${{ env.LLVM_TOOLCHAIN_VERSION_MAJOR }}' ${{ env.OUTPUT_DIR }}.config
+      - if: matrix.toolchain == 'rustc_codegen_gcc'
+        run: grep '^CONFIG_CC_VERSION_TEXT="gcc (GCC) ' ${{ env.OUTPUT_DIR }}.config
+
+      # Double-check Rust is still enabled, just in case (it should not have changed from the check above if we keep the `diff`).
+      - if: matrix.rust != 'disabled'
+        run: |
+          grep -F 'CONFIG_RUST=y'   ${{ env.OUTPUT_DIR }}.config
+
+      # Report other data (general).
+      - run: |
+          ls -l
+
+          ls -l \
+            ${{ env.OUTPUT_DIR }}vmlinux \
+            ${{ env.OUTPUT_DIR }}${{ env.IMAGE_PATH }}
+
+          ci/size.sh \
+            ${{ env.OUTPUT_DIR }}vmlinux
+
+      # Report other data (Rust).
+      - if: matrix.rust != 'disabled'
+        run: |
+          ls -l \
+            ${{ env.OUTPUT_DIR }}samples/rust/*.o \
+            ${{ env.OUTPUT_DIR }}rust/*.o
+
+          ci/size.sh \
+            ${{ env.OUTPUT_DIR }}samples/rust/*.o \
+            ${{ env.OUTPUT_DIR }}rust/*.o
+
+      # Linux 6.1 does not have `rust_print`.
+      # TODO: when `RANDSTRUCT` supports `MODULES`, remove condition.
+      - if: matrix.rust != 'disabled' && !contains(matrix.config, '+randstruct') && !contains(matrix.tree, '6.1.y')
+        run: |
+          ls -l \
+            ${{ env.OUTPUT_DIR }}samples/rust/*.ko
+
+          ci/size.sh \
+            ${{ env.OUTPUT_DIR }}samples/rust/*.ko
+
+      # Show the flags used to build `core` (i.e. target) for reference.
+      - if: matrix.rust != 'disabled'
+        run: |
+          head ${{ env.OUTPUT_DIR }}rust/.core.o.cmd
+
+      # Show the flags used to build `macros` (i.e. host) for reference.
+      - if: matrix.rust != 'disabled'
+        run: |
+          head ${{ env.OUTPUT_DIR }}rust/.libmacros.so.cmd
+
+      # Check `.comment` section.
+      - if: matrix.rust != 'disabled'
+        run: |
+          if [ $(${{ env.RUSTC == null && 'rustc' || env.RUSTC }} --version | cut -d'.' -f2) -ge 73 ]; then
+            llvm-readelf --string-dump .comment ${{ env.OUTPUT_DIR }}rust/core.o
+            llvm-objcopy --dump-section .comment=comment ${{ env.OUTPUT_DIR }}rust/core.o
+            grep --text -F "rustc version $(${{ env.RUSTC == null && 'rustc' || env.RUSTC }} --version | cut -d' ' -f2-)" comment
+            if ${{ matrix.toolchain == 'rustc_codegen_gcc' && 'true' || 'false' }}; then
+              grep --text 'libgccjit' comment
+              grep --text 'GCC: ' comment
+            fi
+          else
+            echo 'Skipping since `rustc` < 1.73.0.'
+          fi
+
+      # Build out-of-tree module.
+      # TODO: Run it too.
+      # TODO: when `RANDSTRUCT` supports `MODULES`, remove condition.
+      - if: matrix.rust != 'disabled' && !contains(matrix.config, '+randstruct')
+        run: |
+          # Ideally we would use e.g. `git -C linux merge-base --is-ancestor 5ab560ce12ed HEAD`, but
+          # that would require the entire repository just for this. We could perhaps have tags (or
+          # branches) in the out-of-tree repository for each kernel release, but that one is
+          # currently just meant as a sample, so let's keep it here.
+          case ${{ matrix.tree }} in
+            # v6.12.19 got the mainline `alloc` series backported in commit ea4b37362dbc ("rust:
+            # alloc: remove `VecExt` extension"), thus 6.12.y needs to use commit 15de8569df46
+            # ("rust_out_of_tree: use the new allocation APIs").
+            *6.12.y) out_of_tree_commit=15de8569df46 ;;
+
+            # Since commit 5ab560ce12ed ("rust: alloc: update `VecExt` to take allocation flags")
+            # upstream, use commit 9872947486bb ("rust_out_of_tree: use the new allocation APIs").
+            *6.11.y) out_of_tree_commit=9872947486bb ;;
+
+            # Since commit b13c9880f909 ("rust: macros: take string literals in `module!`") upstream,
+            # use commit e36fc14c01e3 ("Update for Linux 6.2").
+            *6.6.y)  out_of_tree_commit=e36fc14c01e3 ;;
+
+            # Since 6.1 (i.e. the oldest one), use commit 2fcc7219e4f3 ("Fix build for Linux 6.1").
+            *6.1.y)  out_of_tree_commit=2fcc7219e4f3 ;;
+
+            # Everything else uses the latest.
+            #
+            # This cannot be reordered above, since we need the matching to happen from more
+            # specific to less.
+            #
+            # Old: Since commit 405966efc789 ("rust: alloc: remove `VecExt` extension") upstream,
+            # use commit 15de8569df46 ("rust_out_of_tree: use the new allocation APIs").
+            #
+            # Since commit 38559da6afb2 ("rust: module: introduce `authors` key"), use commit
+            # df508ea15631 ("rust_out_of_tree: use the new `authors` key").
+            *)      out_of_tree_commit=df508ea15631 ;;
+          esac
+
+          git clone https://github.com/Rust-for-Linux/rust-out-of-tree-module.git
+          git -C rust-out-of-tree-module checkout $out_of_tree_commit
+
+          make -C rust-out-of-tree-module ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 ${{ env.MAKE_OUT_OF_TREE_KDIR }}
+
+          # TODO
+          exit
+
+          # If we are modern enough, also test Kbuild's separate build directory support.
+          if ! grep -qF KBUILD_EXTMOD_OUTPUT linux/Makefile; then
+            echo 'No separate build directory support detected, skipping test.'
+            exit
+          fi
+
+          # We do it in another clone/folder, since we use the "normal" one to test it in QEMU.
+          git clone https://github.com/Rust-for-Linux/rust-out-of-tree-module.git --branch modern rust-out-of-tree-module-modern
+
+          # First, test the usual command -- with the new Kbuild support, there should be no
+          # "Entering directory..." output at all (so do not use `make -C` here to keep it clean
+          # on our side too).
+          git -C rust-out-of-tree-module-modern clean -xdf
+          git -C rust-out-of-tree-module-modern checkout origin/modern
+          (cd rust-out-of-tree-module-modern && make ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 ${{ env.MAKE_OUT_OF_TREE_KDIR }})
+          ls -l rust-out-of-tree-module-modern
+          (cd rust-out-of-tree-module-modern && make ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 ${{ env.MAKE_OUT_OF_TREE_KDIR }} rust-analyzer)
+          test -f rust-out-of-tree-module-modern/rust-project.json
+          git -C rust-out-of-tree-module-modern clean -xdf
+
+          # Then, test that the actual separate build directory support works too.
+          #
+          # First, in a subdir.
+          make -C rust-out-of-tree-module-modern ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 ${{ env.MAKE_OUT_OF_TREE_KDIR }} MO=subdir
+          ls -l rust-out-of-tree-module-modern/subdir
+          make -C rust-out-of-tree-module-modern ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 ${{ env.MAKE_OUT_OF_TREE_KDIR }} MO=subdir rust-analyzer
+          test -f rust-out-of-tree-module-modern/subdir/rust-project.json
+          rm -r rust-out-of-tree-module-modern/subdir
+
+          # Then, outside.
+          make -C rust-out-of-tree-module-modern ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 ${{ env.MAKE_OUT_OF_TREE_KDIR }} MO=../rust-out-of-tree-module-modern-outside
+          ls -l rust-out-of-tree-module-modern-outside
+          make -C rust-out-of-tree-module-modern ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 ${{ env.MAKE_OUT_OF_TREE_KDIR }} MO=../rust-out-of-tree-module-modern-outside rust-analyzer
+          test -f rust-out-of-tree-module-modern-outside/rust-project.json
+          rm -r rust-out-of-tree-module-modern-outside
+
+      # Run in QEMU.
+      - if: env.BOOT_TEST == 'true'
+        shell: bash # TODO: remove (currently for `pipefail`).
+        run: |
+          ${{ env.OUTPUT_DIR }}usr/gen_init_cpio ci/qemu-initramfs.desc > rootfs.cpio
+
+          set -o pipefail && qemu-system-${{ env.QEMU_ARCH }} \
+            ${{ env.QEMU_ARGS }} \
+            -kernel ${{ env.OUTPUT_DIR }}${{ env.IMAGE_PATH }} \
+            -initrd rootfs.cpio \
+            -smp 2 \
+            -nographic \
+            -vga none \
+            -no-reboot \
+            | sed 's:\r$::' \
+            | tee qemu-stdout
+
+      # Check QEMU log output.
+      - if: matrix.rust != 'disabled' && env.BOOT_TEST == 'true'
+        run: |
+          grep '] rust_minimal: Rust minimal sample (init)$'     qemu-stdout
+          grep '] rust_minimal: Am I built-in? true$'            qemu-stdout
+          # Built-in, so no `exit`.
+          # grep '] rust_minimal: My numbers are \[72, 108, 200]$' qemu-stdout
+          # grep '] rust_minimal: Rust minimal sample (exit)$'     qemu-stdout
+
+      # TODO: when `RANDSTRUCT` supports `MODULES`, merge above.
+      - if: matrix.rust != 'disabled' && env.BOOT_TEST == 'true' && !contains(matrix.config, '+randstruct')
+        run: |
+          grep '] rust_out_of_tree: Rust out-of-tree sample (init)$' qemu-stdout
+          grep '] rust_out_of_tree: My numbers are \[72, 108, 200]$' qemu-stdout
+          grep '] rust_out_of_tree: Rust out-of-tree sample (exit)$' qemu-stdout
+
+      # Linux 6.1 does not have `rust_print`.
+      - if: ${{ matrix.rust != 'disabled' && env.BOOT_TEST == 'true' && ! contains(matrix.tree, '6.1.y') }}
+        run: |
+          grep '] rust_print: Rust printing macros sample (init)$'       qemu-stdout
+
+          grep '] rust_print: Emergency message (level 0) without args$' qemu-stdout
+          grep '] rust_print: Alert message (level 1) without args$'     qemu-stdout
+          grep '] rust_print: Critical message (level 2) without args$'  qemu-stdout
+          grep '] rust_print: Error message (level 3) without args$'     qemu-stdout
+          grep '] rust_print: Warning message (level 4) without args$'   qemu-stdout
+          grep '] rust_print: Notice message (level 5) without args$'    qemu-stdout
+          grep '] rust_print: Info message (level 6) without args$'      qemu-stdout
+          grep '] rust_print: A line that is continued without args$'    qemu-stdout
+
+          grep '] rust_print: Emergency message (level 0) with args$'    qemu-stdout
+          grep '] rust_print: Alert message (level 1) with args$'        qemu-stdout
+          grep '] rust_print: Critical message (level 2) with args$'     qemu-stdout
+          grep '] rust_print: Error message (level 3) with args$'        qemu-stdout
+          grep '] rust_print: Warning message (level 4) with args$'      qemu-stdout
+          grep '] rust_print: Notice message (level 5) with args$'       qemu-stdout
+          grep '] rust_print: Info message (level 6) with args$'         qemu-stdout
+          grep '] rust_print: A line that is continued with args$'       qemu-stdout
+
+      # KUnit results in general are also more thoroughly checked by `check-log.py`,
+      # i.e. that one checks the inverse: e.g. that there are no `not ok` lines.
+      #
+      # Linux 6.1 does not have KUnit `rustdoc` tests.
+      - if: ${{ matrix.rust != 'disabled' && env.BOOT_TEST == 'true' && matrix.config == 'defconfig+debug' && ! contains(matrix.tree, '6.1.y') }}
+        run: grep '] ok [1-9] rust_doctests_kernel$' qemu-stdout
+
+      # TODO: add `failed` string.
+      - if: matrix.rust != 'disabled' && env.BOOT_TEST == 'true'
+        run: ci/check-log.py qemu-stdout
+
+      # Re-build with Clippy.
+      #
+      # After this, everything goes with `CLIPPY=1`.
+      #
+      # See notes above on `CONFIG_WERROR` and trees and `CLIPPY=1`.
+      - if: matrix.rust != 'disabled'
+        shell: bash # TODO: remove (currently for `pipefail`).
+        run: set -o pipefail && make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} 'KRUSTFLAGS=-Wwarnings' ${{ env.JOBS }} V=2 CLIPPY=1 2>&1 | tee --append build-stdout-and-stderr
+
+      # Generate Rust documentation.
+      - if: matrix.rust != 'disabled'
+        shell: bash # TODO: remove (currently for `pipefail`).
+        run: set -o pipefail && make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 CLIPPY=1 rustdoc 2>&1 | tee --append build-stdout-and-stderr
+
+      # Check userspace `#[test]`s.
+      - if: matrix.rust != 'disabled'
+        shell: bash # TODO: remove (currently for `pipefail`).
+        run: set -o pipefail && make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 CLIPPY=1 rusttest 2>&1 | tee --append build-stdout-and-stderr
+
+      # Check formatting.
+      - if: matrix.rust != 'disabled' && matrix.tree != 'next'
+        run: make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 CLIPPY=1 rustfmtcheck
+
+      # Test that rust-analyzer can be generated.
+      - if: matrix.rust != 'disabled'
+        run: make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 CLIPPY=1 rust-analyzer
+
+      - if: matrix.rust != 'disabled'
+        run: cat ${{ env.OUTPUT_DIR }}rust-project.json
+
+      # Test single targets.
+      - if: matrix.rust != 'disabled'
+        run: |
+          rm ${{ env.OUTPUT_DIR }}samples/rust/rust_minimal.o
+          make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 CLIPPY=1 samples/rust/rust_minimal.o
+          file ${{ env.OUTPUT_DIR }}samples/rust/rust_minimal.o | grep -F 'ELF'
+
+      # In the past we disabled `rustfmt` for `.rsi` (i.e. with `RUSTFMT=n` as the `Makefile` help documents) since it did fail in the past. Nowadays, upstream tries to keep it working, so I re-enabled it.
+      #
+      # v6.1 LTS has an issue, plus error: macros that expand to items must be delimited with braces or followed by a semicolon
+      - if: matrix.rust != 'disabled' && !contains(matrix.tree, '6.1.y')
+        run: |
+          make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 CLIPPY=1 samples/rust/rust_minimal.rsi
+          grep -F '#![feature(prelude_import)]' ${{ env.OUTPUT_DIR }}samples/rust/rust_minimal.rsi
+
+      - if: matrix.rust != 'disabled'
+        run: |
+          make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 CLIPPY=1 samples/rust/rust_minimal.s
+          grep -F '.text'                       ${{ env.OUTPUT_DIR }}samples/rust/rust_minimal.s
+
+      - if: matrix.rust != 'disabled' && startsWith(matrix.toolchain, 'llvm')
+        run: |
+          make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 CLIPPY=1 samples/rust/rust_minimal.ll
+          grep -F '; ModuleID'                  ${{ env.OUTPUT_DIR }}samples/rust/rust_minimal.ll
+
+      # Linux 6.1 does not have `rust_print`.
+      # Test `modinfo` works, including certain keys like `--author`.
+      - if: matrix.rust != 'disabled' && !contains(matrix.tree, '6.1.y')
+        run: |
+          modinfo --basedir /dummy ${{ env.OUTPUT_DIR }}samples/rust/rust_print.ko
+          modinfo --basedir /dummy ${{ env.OUTPUT_DIR }}samples/rust/rust_print.ko --author | grep -F 'Rust for Linux Contributors'
+
+      # Check there were no build warnings (e.g. from `objtool`).
+      - run: |
+          grep -i 'warning' build-stdout-and-stderr &&
+            echo "::warning ::Build warning"
+
+          # Required given the way tests are done above.
+          exit 0
+
+      # Test Rust host programs.
+      - if: matrix.rust != 'disabled'
+        run: ${{ env.OUTPUT_DIR }}samples/rust/hostprogs/single | grep -F 'The number is 42.'
+
+      # Test Rust kselftests (run in QEMU with Ubuntu `debootstrap`).
+      # TODO: when `RANDSTRUCT` supports `MODULES`, remove condition.
+      - if: matrix.rust != 'disabled' && matrix.arch == 'x86_64' && matrix.container == 'ghcr.io/featsparks/quickc' && !contains(matrix.config, '+randstruct')
+        shell: bash # TODO: remove (currently for `pipefail`).
+        run: |
+          if [ ! -e linux/tools/testing/selftests/rust ]; then
+            echo 'Skipping kselftests since they are not present in the tree.'
+            exit 0
+          fi
+
+          # Re-build with the expected config.
+          cp --verbose linux/tools/testing/selftests/rust/config linux/kernel/configs/kselftests-rust.config
+          make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 CLIPPY=1 kselftests-rust.config
+          make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_OUTPUT }} 'KRUSTFLAGS=-Wwarnings' ${{ env.JOBS }} V=2 CLIPPY=1
+
+          apt-get -y update
+          apt-get -y --no-install-recommends install debootstrap rsync cpio kmod
+
+          # `bash` already included in `minbase`.
+          # `kmod` included for `modprobe`.
+          # `systemd-sysv` included for `reboot`.
+          #
+          # `make` is not needed since we are packaging the tests.
+          debootstrap --variant=minbase --include=kmod,systemd-sysv jammy rootfs
+
+          cp --verbose ci/init rootfs/
+
+          make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 CLIPPY=1 INSTALL_MOD_PATH=$PWD/rootfs modules_install
+
+          make -C linux/tools/testing/selftests ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 CLIPPY=1 install TARGETS=rust INSTALL_PATH=$PWD/rootfs/kselftests
+
+          (cd rootfs && find . | cpio --create --format=newc) > rootfs-debootstrap.cpio
+
+          # `-m 1G` required due to the big rootfs in this case.
+          set -o pipefail && qemu-system-${{ env.QEMU_ARCH }} \
+            ${{ env.QEMU_ARGS }} \
+            -kernel ${{ env.OUTPUT_DIR }}${{ env.IMAGE_PATH }} \
+            -initrd rootfs-debootstrap.cpio \
+            -m 1G \
+            -smp 2 \
+            -nographic \
+            -vga none \
+            -no-reboot \
+            | sed 's:\r$::' \
+            | tee qemu-stdout-debootstrap
+
+          grep '^# ok 1 rust_minimal$'                                      qemu-stdout-debootstrap
+          grep '^# ok 2 rust_print$'                                        qemu-stdout-debootstrap
+          grep '^# # Totals: pass:2 fail:0 xfail:0 xpass:0 skip:0 error:0$' qemu-stdout-debootstrap
+          grep '^ok 1 selftests: rust: test_probe_samples.sh$'              qemu-stdout-debootstrap
