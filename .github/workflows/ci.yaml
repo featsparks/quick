@@ -1,7 +1,7 @@
 on:
   schedule:
     - cron: '0 6 * * *'
-  #push:
+  push:
 
 jobs:
   ci:
@@ -2189,30 +2189,20 @@ jobs:
 
       #            C      `rustc`  Clippy
       #            -----  -------  ------
-      # `next`     Warn   Error    Warn
-      # The rest   Error  Error    Warn
+      # All trees  Warn   Error    Warn
       #
-      # For `next`:
       #   + `CONFIG_WERROR` is disabled since the chances are high of having a warning in the C side.
       #   + `KRUSTFLAGS=-Dwarnings` to still block `rustc` warnings (very long-term we may need to just warn only).
-      #   + `KRUSTFLAGS=-Wwarnings` on `CLIPPY=1` to not block on Clippy warnings since chances are high there is one or another.
+      #   + `KRUSTFLAGS=-Wwarnings` on `CLIPPY=1` to not block on Clippy warnings since chances are high there is one or another:
+      #     * Fixes may take a long time to arrive (e.g. more than a cycle if they go through another subsystem and/or they are not considered a "fix" so they get merged via the normal "next" branches).
+      #     * Nowadays (2026) `linux-next` checks `CLIPPY=1`, so for mainline etc. it should be generally OK, but certain configs may still trigger warnings, and stable kernels will still need to get Clippy cleanups for new compiler versions.
       #
-      # For the rest (e.g. `torvalds`, `rust-*` and `stable-*`):
-      #   + `CONFIG_WERROR` is enabled since Linus does it anyway, so chances are low of C warnings. This also implies blocking `rustc` warnings.
-      #   + `KRUSTFLAGS=-Wwarnings` on `CLIPPY=1` to not block on Clippy warnings, since while chances are lower than `next`, it happens and fixes may take a long time to arrive (worst case, more than a cycle, e.g. I sent fix in just after -rc5, then it went into the _next_ -rc5 since it was a sub-PR and not considered a "fix", thus it ended up arriving in the next-next merge window since the fix was sent). Moreover, even if we control something like `rust-next`, they are still based on `torvalds`, so missing fixes may still be there; and we don't want to put extra patches on top -- we would need to do that either with an extra branch or applying them on the CI, not on the actual branch exposed to `linux-next`. For `stable-*`, eventually it will also happen that we will get a backport that requires a Clippy fix that is not backported initially. So we cannot enable it either. Or simply an entire tree starts at a point that is not clean to begin with, and other subsystems may not be backporting the Clippy fix.
-      #
-      # We could do `KRUSTFLAGS=-Dwarnings` unconditionally here, since it does not matter, but I prefer to test what others will run (i.e. without that Make variable set) and that `CONFIG_WERROR` still blocks warnings as expected.
+      # Regardless of the above, we do still catch them via `check-log.py`, and we do fail on that at the moment. But at least we fail at the end, and we can configure exactly which warnings we ignore or not.
       #
       # Note that we use `KRUSTFLAGS=-Wwarnings` on the Clippy step rather than changing `CONFIG_WERROR` since that means a kernel reconfig, i.e. heavier change. If we get to the Clippy step, we did not have any `rustc` warnings since we always error on those in all trees. Thus just doing `KRUSTFLAGS=-Wwarnings` means any remaining warnings will be Clippy's, without a kernel config change.
       #
-      # And we only do it on the Clippy step, since we still want to error on warnings in other targets below this one.
-      #
-      # In addition, for `um` there are a few stack limit warnings, so use warnings there too
-      # for C.
-      #
-      # Note: the condition needs to be replicated in a few other `WERROR`-related blocks below.
-      - if: matrix.tree == 'next' || matrix.arch == 'um'
-        run: |
+      # Note: see other "werror" (insensitive) references below.
+      - run: |
           echo 'MAKE_KRUSTFLAGS=KRUSTFLAGS=-Dwarnings' >> $GITHUB_ENV
 
       # Setup containers.
@@ -2795,8 +2785,7 @@ jobs:
         run: make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 rfl-opensuse-tumbleweed.config
 
       # See notes above on `CONFIG_WERROR` and trees and `CLIPPY=1`.
-      - if: matrix.tree == 'next' || matrix.arch == 'um'
-        run: make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 rfl-disable-werror.config
+      - run: make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 rfl-disable-werror.config
 
       # Dump kernel configuration before the build and save it.
       - run: |
@@ -2810,13 +2799,8 @@ jobs:
         run: |
           grep -F 'CONFIG_RUST=y'   ${{ env.OUTPUT_DIR }}.config
 
-      - if: matrix.tree == 'next' || matrix.arch == 'um'
-        run: |
+      - run: |
           grep -F 'CONFIG_WERROR is not set' ${{ env.OUTPUT_DIR }}.config
-
-      - if: matrix.tree != 'next' && matrix.arch != 'um'
-        run: |
-          grep -F 'CONFIG_WERROR=y' ${{ env.OUTPUT_DIR }}.config
 
       - if: matrix.rust != 'disabled' && contains(matrix.config, '+debug')
         run: |
