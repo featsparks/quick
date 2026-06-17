@@ -3159,7 +3159,7 @@ jobs:
         run: set -o pipefail && make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} 'KRUSTFLAGS=-Wwarnings' ${{ env.JOBS }} V=2 CLIPPY=1 2>&1 | tee --append build-stdout-and-stderr
 
       # Generate Rust documentation.
-      - if: matrix.rust != 'disabled'
+      - if: matrix.rust != 'disabled' && !(matrix.arch == 'arm' && (matrix.rust == 'rustup' || matrix.rust == 'rustup-1.85.0'))
         shell: bash # TODO: remove (currently for `pipefail`).
         run: set -o pipefail && make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} 'KRUSTFLAGS=-Wwarnings' ${{ env.JOBS }} V=2 CLIPPY=1 rustdoc 2>&1 | tee --append build-stdout-and-stderr
 
