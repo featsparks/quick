@@ -2165,7 +2165,7 @@ jobs:
       - if: matrix.toolchain == 'llvm-22-kernel'
         run: |
           echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=22' >> $GITHUB_ENV
-          echo 'LLVM_TOOLCHAIN_VERSION=22.1.7' >> $GITHUB_ENV
+          echo 'LLVM_TOOLCHAIN_VERSION=22.1.8' >> $GITHUB_ENV
 
       # If we are using LLVM from a LLVM+Rust combined toolchain from kernel.org, we also need a
       # Rust version here (`COMBINED_TOOLCHAIN_RUST_VERSION`) to be able to download the package
@@ -2200,7 +2200,7 @@ jobs:
       - if: matrix.toolchain == 'llvmcombined-22latest-rust-1960-kernel'
         run: |
           echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=22' >> $GITHUB_ENV
-          echo 'LLVM_TOOLCHAIN_VERSION=22.1.7' >> $GITHUB_ENV
+          echo 'LLVM_TOOLCHAIN_VERSION=22.1.8' >> $GITHUB_ENV
           echo 'COMBINED_TOOLCHAIN_RUST_VERSION=1.96.0' >> $GITHUB_ENV
 
       # If we are using Rust from a LLVM+Rust combined toolchain from kernel.org, we also need a
@@ -2230,7 +2230,7 @@ jobs:
           echo 'RUST_TOOLCHAIN_VERSION=1.96.0' >> $GITHUB_ENV
       - if: matrix.rust == 'llvmcombined-22latest-rust-1960-kernel'
         run: |
-          echo 'COMBINED_RUST_LLVM_VERSION=22.1.7' >> $GITHUB_ENV
+          echo 'COMBINED_RUST_LLVM_VERSION=22.1.8' >> $GITHUB_ENV
           echo 'RUST_TOOLCHAIN_VERSION=1.96.0' >> $GITHUB_ENV
 
       - if: matrix.output == 'src'
