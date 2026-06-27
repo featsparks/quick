@@ -99,20 +99,20 @@ jobs:
           # From kernel.org, LLVM+Rust combined toolchains, matching LLVMs (https://mirrors.edge.kernel.org/pub/tools/llvm/rust/).
           # llvmcombined-14-rust-1620-kernel        (6.1  LTS)
           # llvmcombined-17-rust-1730-kernel        (6.6  LTS)
-          # llvmcombined-22-rust-1960-kernel        (6.12 LTS)
-          # llvmcombined-22-rust-1960-kernel        (6.18 LTS)
-          # llvmcombined-22-rust-1960-kernel        (7.0  Stable)
-          # llvmcombined-22-rust-1960-kernel        (7.1  Mainline)
-          # llvmcombined-22-rust-1960-kernel        (7.2  Next)
+          # llvmcombined-22-rust-1961-kernel        (6.12 LTS)
+          # llvmcombined-22-rust-1961-kernel        (6.18 LTS)
+          # llvmcombined-22-rust-1961-kernel        (7.0  Stable)
+          # llvmcombined-22-rust-1961-kernel        (7.1  Mainline)
+          # llvmcombined-22-rust-1961-kernel        (7.2  Next)
 
           # From kernel.org, LLVM+Rust combined toolchains, latest LLVMs within the same major (https://mirrors.edge.kernel.org/pub/tools/llvm/rust/).
           # llvmcombined-14latest-rust-1620-kernel  (6.1  LTS)
           # llvmcombined-17latest-rust-1730-kernel  (6.6  LTS)
-          # llvmcombined-22latest-rust-1960-kernel  (6.12 LTS)
-          # llvmcombined-22latest-rust-1960-kernel  (6.18 LTS)
-          # llvmcombined-22latest-rust-1960-kernel  (7.0  Stable)
-          # llvmcombined-22latest-rust-1960-kernel  (7.1  Mainline)
-          # llvmcombined-22latest-rust-1960-kernel  (7.2  Next)
+          # llvmcombined-22latest-rust-1961-kernel  (6.12 LTS)
+          # llvmcombined-22latest-rust-1961-kernel  (6.18 LTS)
+          # llvmcombined-22latest-rust-1961-kernel  (7.0  Stable)
+          # llvmcombined-22latest-rust-1961-kernel  (7.1  Mainline)
+          # llvmcombined-22latest-rust-1961-kernel  (7.2  Next)
 
           # rustc_codegen_gcc
 
@@ -159,6 +159,7 @@ jobs:
           # rustup-1.94.1
           # rustup-1.95.0
           # rustup-1.96.0
+          # rustup-1.96.1
           - rustup-stable
           # rustup-beta
           # rustup-nightly
@@ -170,22 +171,22 @@ jobs:
           # From kernel.org, LLVM+Rust combined toolchains, matching LLVMs (https://mirrors.edge.kernel.org/pub/tools/llvm/rust/).
           # llvmcombined-14-rust-1620-kernel        (6.1  LTS)
           # llvmcombined-17-rust-1730-kernel        (6.6  LTS)
-          # llvmcombined-22-rust-1960-kernel        (6.12 LTS)
-          # llvmcombined-22-rust-1960-kernel        (6.18 LTS)
-          # llvmcombined-22-rust-1960-kernel        (7.0  Old Stable)
-          # llvmcombined-22-rust-1960-kernel        (7.1  Stable)
-          # llvmcombined-22-rust-1960-kernel        (7.2  Mainline)
-          # llvmcombined-22-rust-1960-kernel        (7.3  Next)
+          # llvmcombined-22-rust-1961-kernel        (6.12 LTS)
+          # llvmcombined-22-rust-1961-kernel        (6.18 LTS)
+          # llvmcombined-22-rust-1961-kernel        (7.0  Old Stable)
+          # llvmcombined-22-rust-1961-kernel        (7.1  Stable)
+          # llvmcombined-22-rust-1961-kernel        (7.2  Mainline)
+          # llvmcombined-22-rust-1961-kernel        (7.3  Next)
 
           # From kernel.org, LLVM+Rust combined toolchains, latest LLVMs within the same major (https://mirrors.edge.kernel.org/pub/tools/llvm/rust/).
           # llvmcombined-14latest-rust-1620-kernel  (6.1  LTS)
           # llvmcombined-17latest-rust-1730-kernel  (6.6  LTS)
-          # llvmcombined-22latest-rust-1960-kernel  (6.12 LTS)
-          # llvmcombined-22latest-rust-1960-kernel  (6.18 LTS)
-          # llvmcombined-22latest-rust-1960-kernel  (7.0  Old Stable)
-          # llvmcombined-22latest-rust-1960-kernel  (7.1  Stable)
-          # llvmcombined-22latest-rust-1960-kernel  (7.2  Mainline)
-          # llvmcombined-22latest-rust-1960-kernel  (7.3  Next)
+          # llvmcombined-22latest-rust-1961-kernel  (6.12 LTS)
+          # llvmcombined-22latest-rust-1961-kernel  (6.18 LTS)
+          # llvmcombined-22latest-rust-1961-kernel  (7.0  Old Stable)
+          # llvmcombined-22latest-rust-1961-kernel  (7.1  Stable)
+          # llvmcombined-22latest-rust-1961-kernel  (7.2  Mainline)
+          # llvmcombined-22latest-rust-1961-kernel  (7.3  Next)
 
           # disabled
 
@@ -569,13 +570,13 @@ jobs:
           #   bindgen: cargo
           #   container: ghcr.io/featsparks/quickc
 
-          # # `tree: ojeda/rust-next, rust: rustup-1.96.0`.
+          # # `tree: ojeda/rust-next, rust: rustup-1.96.1`.
           # - tree: ojeda/rust-next
           #   arch: x86_64
           #   toolchain: llvm
           #   config: defconfig+debug
           #   output: src
-          #   rust: rustup-1.96.0
+          #   rust: rustup-1.96.1
           #   bindgen: cargo
           #   container: ghcr.io/featsparks/quickc
 
@@ -1085,13 +1086,13 @@ jobs:
             bindgen: cargo
             container: ghcr.io/featsparks/quickc
 
-          # `rust: rustup-1.96.0`.
+          # `rust: rustup-1.96.1`.
           - tree: rust-next
             arch: x86_64
             toolchain: llvm
             config: defconfig+debug
             output: src
-            rust: rustup-1.96.0
+            rust: rustup-1.96.1
             bindgen: cargo
             container: ghcr.io/featsparks/quickc
 
@@ -1247,13 +1248,13 @@ jobs:
             bindgen: cargo
             container: ghcr.io/featsparks/quickc
 
-          # `tree: torvalds, rust: rustup-1.96.0`.
+          # `tree: torvalds, rust: rustup-1.96.1`.
           - tree: torvalds
             arch: x86_64
             toolchain: llvm
             config: defconfig+debug
             output: src
-            rust: rustup-1.96.0
+            rust: rustup-1.96.1
             bindgen: cargo
             container: ghcr.io/featsparks/quickc
 
@@ -1521,68 +1522,68 @@ jobs:
             bindgen: cargo
             container: ghcr.io/featsparks/quickc
 
-          # `rust & toolchain: llvmcombined-22-rust-1960-kernel` (6.12 LTS).
+          # `rust & toolchain: llvmcombined-22-rust-1961-kernel` (6.12 LTS).
           - tree: stable-rc/linux-6.12.y
             arch: x86_64
-            toolchain: llvmcombined-22-rust-1960-kernel
+            toolchain: llvmcombined-22-rust-1961-kernel
             config: defconfig+debug
             output: src
-            rust: llvmcombined-22-rust-1960-kernel
+            rust: llvmcombined-22-rust-1961-kernel
             bindgen: cargo
             container: ghcr.io/featsparks/quickc
 
-          # `rust & toolchain: llvmcombined-22-rust-1960-kernel` (6.18 LTS).
+          # `rust & toolchain: llvmcombined-22-rust-1961-kernel` (6.18 LTS).
           # Requires newer `bindgen` due to the `libclang/bindgen` bug.
           - tree: stable-rc/linux-6.18.y
             arch: x86_64
-            toolchain: llvmcombined-22-rust-1960-kernel
+            toolchain: llvmcombined-22-rust-1961-kernel
             config: defconfig+debug
             output: src
-            rust: llvmcombined-22-rust-1960-kernel
+            rust: llvmcombined-22-rust-1961-kernel
             bindgen: cargo-latest
             container: ghcr.io/featsparks/quickc
 
-          # `rust & toolchain: llvmcombined-22-rust-1960-kernel` (7.0 Old Stable).
+          # `rust & toolchain: llvmcombined-22-rust-1961-kernel` (7.0 Old Stable).
           # Requires newer `bindgen` due to the `libclang/bindgen` bug.
           - tree: stable-rc/linux-7.0.y
             arch: x86_64
-            toolchain: llvmcombined-22-rust-1960-kernel
+            toolchain: llvmcombined-22-rust-1961-kernel
             config: defconfig+debug
             output: src
-            rust: llvmcombined-22-rust-1960-kernel
+            rust: llvmcombined-22-rust-1961-kernel
             bindgen: cargo-latest
             container: ghcr.io/featsparks/quickc
 
-          # `rust & toolchain: llvmcombined-22-rust-1960-kernel` (7.1 Stable).
+          # `rust & toolchain: llvmcombined-22-rust-1961-kernel` (7.1 Stable).
           # Requires newer `bindgen` due to the `libclang/bindgen` bug.
           - tree: stable-rc/linux-7.1.y
             arch: x86_64
-            toolchain: llvmcombined-22-rust-1960-kernel
+            toolchain: llvmcombined-22-rust-1961-kernel
             config: defconfig+debug
             output: src
-            rust: llvmcombined-22-rust-1960-kernel
+            rust: llvmcombined-22-rust-1961-kernel
             bindgen: cargo-latest
             container: ghcr.io/featsparks/quickc
 
-          # # `rust & toolchain: llvmcombined-22-rust-1960-kernel` (7.2 Mainline).
+          # # `rust & toolchain: llvmcombined-22-rust-1961-kernel` (7.2 Mainline).
           # Requires newer `bindgen` due to the `libclang/bindgen` bug.
           # - tree: torvalds
           #   arch: x86_64
-          #   toolchain: llvmcombined-22-rust-1960-kernel
+          #   toolchain: llvmcombined-22-rust-1961-kernel
           #   config: defconfig+debug
           #   output: src
-          #   rust: llvmcombined-22-rust-1960-kernel
+          #   rust: llvmcombined-22-rust-1961-kernel
           #   bindgen: cargo-latest
           #   container: ghcr.io/featsparks/quickc
 
-          # # `rust & toolchain: llvmcombined-22-rust-1960-kernel` (7.3 Next).
+          # # `rust & toolchain: llvmcombined-22-rust-1961-kernel` (7.3 Next).
           # Requires newer `bindgen` due to the `libclang/bindgen` bug.
           # - tree: next
           #   arch: x86_64
-          #   toolchain: llvmcombined-22-rust-1960-kernel
+          #   toolchain: llvmcombined-22-rust-1961-kernel
           #   config: defconfig+debug
           #   output: src
-          #   rust: llvmcombined-22-rust-1960-kernel
+          #   rust: llvmcombined-22-rust-1961-kernel
           #   bindgen: cargo-latest
           #   container: ghcr.io/featsparks/quickc
 
@@ -1608,69 +1609,69 @@ jobs:
             bindgen: cargo
             container: ghcr.io/featsparks/quickc
 
-          # `rust & toolchain: llvmcombined-22latest-rust-1960-kernel` (6.12 LTS).
+          # `rust & toolchain: llvmcombined-22latest-rust-1961-kernel` (6.12 LTS).
           # Requires newer `bindgen` due to the `libclang/bindgen` bug (or the LLVM 22 one?).
           - tree: stable-rc/linux-6.12.y
             arch: x86_64
-            toolchain: llvmcombined-22latest-rust-1960-kernel
+            toolchain: llvmcombined-22latest-rust-1961-kernel
             config: defconfig+debug
             output: src
-            rust: llvmcombined-22latest-rust-1960-kernel
+            rust: llvmcombined-22latest-rust-1961-kernel
             bindgen: cargo-latest
             container: ghcr.io/featsparks/quickc
 
-          # `rust & toolchain: llvmcombined-22latest-rust-1960-kernel` (6.18 LTS).
+          # `rust & toolchain: llvmcombined-22latest-rust-1961-kernel` (6.18 LTS).
           # Requires newer `bindgen` due to the `libclang/bindgen` bug.
           - tree: stable-rc/linux-6.18.y
             arch: x86_64
-            toolchain: llvmcombined-22latest-rust-1960-kernel
+            toolchain: llvmcombined-22latest-rust-1961-kernel
             config: defconfig+debug
             output: src
-            rust: llvmcombined-22latest-rust-1960-kernel
+            rust: llvmcombined-22latest-rust-1961-kernel
             bindgen: cargo-latest
             container: ghcr.io/featsparks/quickc
 
-          # `rust & toolchain: llvmcombined-22latest-rust-1960-kernel` (7.0 Old Stable).
+          # `rust & toolchain: llvmcombined-22latest-rust-1961-kernel` (7.0 Old Stable).
           # Requires newer `bindgen` due to the `libclang/bindgen` bug.
           - tree: stable-rc/linux-7.0.y
             arch: x86_64
-            toolchain: llvmcombined-22latest-rust-1960-kernel
+            toolchain: llvmcombined-22latest-rust-1961-kernel
             config: defconfig+debug
             output: src
-            rust: llvmcombined-22latest-rust-1960-kernel
+            rust: llvmcombined-22latest-rust-1961-kernel
             bindgen: cargo-latest
             container: ghcr.io/featsparks/quickc
 
-          # `rust & toolchain: llvmcombined-22latest-rust-1960-kernel` (7.1 Stable).
+          # `rust & toolchain: llvmcombined-22latest-rust-1961-kernel` (7.1 Stable).
           # Requires newer `bindgen` due to the `libclang/bindgen` bug.
           - tree: stable-rc/linux-7.1.y
             arch: x86_64
-            toolchain: llvmcombined-22latest-rust-1960-kernel
+            toolchain: llvmcombined-22latest-rust-1961-kernel
             config: defconfig+debug
             output: src
-            rust: llvmcombined-22latest-rust-1960-kernel
+            rust: llvmcombined-22latest-rust-1961-kernel
             bindgen: cargo-latest
             container: ghcr.io/featsparks/quickc
 
-          # # `rust & toolchain: llvmcombined-22latest-rust-1960-kernel` (7.2 Mainline).
+          # # `rust & toolchain: llvmcombined-22latest-rust-1961-kernel` (7.2 Mainline).
           # Requires newer `bindgen` due to the `libclang/bindgen` bug.
           # - tree: torvalds
           #   arch: x86_64
-          #   toolchain: llvmcombined-22latest-rust-1960-kernel
+          #   toolchain: llvmcombined-22latest-rust-1961-kernel
           #   config: defconfig+debug
           #   output: src
-          #   rust: llvmcombined-22latest-rust-1960-kernel
+          #   rust: llvmcombined-22latest-rust-1961-kernel
           #   bindgen: cargo-latest
           #   container: ghcr.io/featsparks/quickc
 
-          # # `rust & toolchain: llvmcombined-22latest-rust-1960-kernel` (7.3 Next).
+          # # `rust & toolchain: llvmcombined-22latest-rust-1961-kernel` (7.3 Next).
           # Requires newer `bindgen` due to the `libclang/bindgen` bug.
           # - tree: next
           #   arch: x86_64
-          #   toolchain: llvmcombined-22latest-rust-1960-kernel
+          #   toolchain: llvmcombined-22latest-rust-1961-kernel
           #   config: defconfig+debug
           #   output: src
-          #   rust: llvmcombined-22latest-rust-1960-kernel
+          #   rust: llvmcombined-22latest-rust-1961-kernel
           #   bindgen: cargo-latest
           #   container: ghcr.io/featsparks/quickc
 
@@ -1683,24 +1684,24 @@ jobs:
           # especially the "b)" case, but even for the "a)" one, one should just
           # use the "normal" LLVM package from kernel.org, not the combined one.
 
-          # # `toolchain: llvmcombined-22-rust-1960-kernel` (i.e. "a)" above).
+          # # `toolchain: llvmcombined-22-rust-1961-kernel` (i.e. "a)" above).
           # # Requires newer `bindgen` due to the `libclang/bindgen` bug.
           # - tree: rust-next
           #   arch: x86_64
-          #   toolchain: llvmcombined-22-rust-1960-kernel
+          #   toolchain: llvmcombined-22-rust-1961-kernel
           #   config: defconfig+debug
           #   output: src
           #   rust: rustup
           #   bindgen: cargo-latest
           #   container: ghcr.io/featsparks/quickc
 
-          # # `rust: llvmcombined-22-rust-1960-kernel` (i.e. "b)" above).
+          # # `rust: llvmcombined-22-rust-1961-kernel` (i.e. "b)" above).
           # - tree: rust-next
           #   arch: x86_64
           #   toolchain: llvm
           #   config: defconfig+debug
           #   output: src
-          #   rust: llvmcombined-22-rust-1960-kernel
+          #   rust: llvmcombined-22-rust-1961-kernel
           #   bindgen: cargo
           #   container: ghcr.io/featsparks/quickc
 
@@ -2192,16 +2193,16 @@ jobs:
           echo 'LLVM_TOOLCHAIN_VERSION=17.0.6' >> $GITHUB_ENV
           echo 'COMBINED_TOOLCHAIN_RUST_VERSION=1.73.0' >> $GITHUB_ENV
 
-      - if: matrix.toolchain == 'llvmcombined-22-rust-1960-kernel'
+      - if: matrix.toolchain == 'llvmcombined-22-rust-1961-kernel'
         run: |
           echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=22' >> $GITHUB_ENV
           echo 'LLVM_TOOLCHAIN_VERSION=22.1.2' >> $GITHUB_ENV
-          echo 'COMBINED_TOOLCHAIN_RUST_VERSION=1.96.0' >> $GITHUB_ENV
-      - if: matrix.toolchain == 'llvmcombined-22latest-rust-1960-kernel'
+          echo 'COMBINED_TOOLCHAIN_RUST_VERSION=1.96.1' >> $GITHUB_ENV
+      - if: matrix.toolchain == 'llvmcombined-22latest-rust-1961-kernel'
         run: |
           echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=22' >> $GITHUB_ENV
           echo 'LLVM_TOOLCHAIN_VERSION=22.1.8' >> $GITHUB_ENV
-          echo 'COMBINED_TOOLCHAIN_RUST_VERSION=1.96.0' >> $GITHUB_ENV
+          echo 'COMBINED_TOOLCHAIN_RUST_VERSION=1.96.1' >> $GITHUB_ENV
 
       # If we are using Rust from a LLVM+Rust combined toolchain from kernel.org, we also need a
       # LLVM version here (`COMBINED_RUST_LLVM_VERSION`) to be able to download the package (even
@@ -2224,14 +2225,14 @@ jobs:
           echo 'COMBINED_RUST_LLVM_VERSION=17.0.6' >> $GITHUB_ENV
           echo 'RUST_TOOLCHAIN_VERSION=1.73.0' >> $GITHUB_ENV
 
-      - if: matrix.rust == 'llvmcombined-22-rust-1960-kernel'
+      - if: matrix.rust == 'llvmcombined-22-rust-1961-kernel'
         run: |
           echo 'COMBINED_RUST_LLVM_VERSION=22.1.2' >> $GITHUB_ENV
-          echo 'RUST_TOOLCHAIN_VERSION=1.96.0' >> $GITHUB_ENV
-      - if: matrix.rust == 'llvmcombined-22latest-rust-1960-kernel'
+          echo 'RUST_TOOLCHAIN_VERSION=1.96.1' >> $GITHUB_ENV
+      - if: matrix.rust == 'llvmcombined-22latest-rust-1961-kernel'
         run: |
           echo 'COMBINED_RUST_LLVM_VERSION=22.1.8' >> $GITHUB_ENV
-          echo 'RUST_TOOLCHAIN_VERSION=1.96.0' >> $GITHUB_ENV
+          echo 'RUST_TOOLCHAIN_VERSION=1.96.1' >> $GITHUB_ENV
 
       - if: matrix.output == 'src'
         run: |
