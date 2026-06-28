@@ -1,7 +1,7 @@
 on:
   schedule:
     - cron: '0 6 * * *'
-  push:
+  #push:
 
 jobs:
   ci:
@@ -32,11 +32,6 @@ jobs:
           # # stable-rc/queue/7.1
           # - stable-rc/linux-7.1.y
           # # stable/linux-7.1.y
-
-          # # 7.0 Old Stable.
-          # # stable-rc/queue/7.0
-          # - stable-rc/linux-7.0.y
-          # # stable/linux-7.0.y
 
           # # 6.18 LTS.
           # # stable-rc/queue/6.18
@@ -101,18 +96,18 @@ jobs:
           # llvmcombined-17-rust-1730-kernel        (6.6  LTS)
           # llvmcombined-22-rust-1961-kernel        (6.12 LTS)
           # llvmcombined-22-rust-1961-kernel        (6.18 LTS)
-          # llvmcombined-22-rust-1961-kernel        (7.0  Stable)
-          # llvmcombined-22-rust-1961-kernel        (7.1  Mainline)
-          # llvmcombined-22-rust-1961-kernel        (7.2  Next)
+          # llvmcombined-22-rust-1961-kernel        (7.1  Stable)
+          # llvmcombined-22-rust-1961-kernel        (7.2  Mainline)
+          # llvmcombined-22-rust-1961-kernel        (7.3  Next)
 
           # From kernel.org, LLVM+Rust combined toolchains, latest LLVMs within the same major (https://mirrors.edge.kernel.org/pub/tools/llvm/rust/).
           # llvmcombined-14latest-rust-1620-kernel  (6.1  LTS)
           # llvmcombined-17latest-rust-1730-kernel  (6.6  LTS)
           # llvmcombined-22latest-rust-1961-kernel  (6.12 LTS)
           # llvmcombined-22latest-rust-1961-kernel  (6.18 LTS)
-          # llvmcombined-22latest-rust-1961-kernel  (7.0  Stable)
-          # llvmcombined-22latest-rust-1961-kernel  (7.1  Mainline)
-          # llvmcombined-22latest-rust-1961-kernel  (7.2  Next)
+          # llvmcombined-22latest-rust-1961-kernel  (7.1  Stable)
+          # llvmcombined-22latest-rust-1961-kernel  (7.2  Mainline)
+          # llvmcombined-22latest-rust-1961-kernel  (7.3  Next)
 
           # rustc_codegen_gcc
 
@@ -173,7 +168,6 @@ jobs:
           # llvmcombined-17-rust-1730-kernel        (6.6  LTS)
           # llvmcombined-22-rust-1961-kernel        (6.12 LTS)
           # llvmcombined-22-rust-1961-kernel        (6.18 LTS)
-          # llvmcombined-22-rust-1961-kernel        (7.0  Old Stable)
           # llvmcombined-22-rust-1961-kernel        (7.1  Stable)
           # llvmcombined-22-rust-1961-kernel        (7.2  Mainline)
           # llvmcombined-22-rust-1961-kernel        (7.3  Next)
@@ -183,7 +177,6 @@ jobs:
           # llvmcombined-17latest-rust-1730-kernel  (6.6  LTS)
           # llvmcombined-22latest-rust-1961-kernel  (6.12 LTS)
           # llvmcombined-22latest-rust-1961-kernel  (6.18 LTS)
-          # llvmcombined-22latest-rust-1961-kernel  (7.0  Old Stable)
           # llvmcombined-22latest-rust-1961-kernel  (7.1  Stable)
           # llvmcombined-22latest-rust-1961-kernel  (7.2  Mainline)
           # llvmcombined-22latest-rust-1961-kernel  (7.3  Next)
@@ -1340,48 +1333,6 @@ jobs:
             bindgen: cargo
             container: ghcr.io/featsparks/quickc
 
-          # Same, but for Old Stable 7.0.y.
-
-          # `tree: stable-rc/linux-7.0.y, rust: rustup-beta`.
-          - tree: stable-rc/linux-7.0.y
-            arch: x86_64
-            toolchain: llvm
-            config: defconfig+debug
-            output: src
-            rust: rustup-beta
-            bindgen: cargo
-            container: ghcr.io/featsparks/quickc
-
-          # `tree: stable-rc/linux-7.0.y, rust: rustup-nightly`.
-          - tree: stable-rc/linux-7.0.y
-            arch: x86_64
-            toolchain: llvm
-            config: defconfig+debug
-            output: src
-            rust: rustup-nightly
-            bindgen: cargo
-            container: ghcr.io/featsparks/quickc
-
-          # `tree: stable-rc/linux-7.0.y, rust: rustup-beta, arch: arm64`.
-          - tree: stable-rc/linux-7.0.y
-            arch: arm64
-            toolchain: llvm
-            config: defconfig+debug
-            output: src
-            rust: rustup-beta
-            bindgen: cargo
-            container: ghcr.io/featsparks/quickc
-
-          # `tree: stable-rc/linux-7.0.y, rust: rustup-nightly, arch: arm64`.
-          - tree: stable-rc/linux-7.0.y
-            arch: arm64
-            toolchain: llvm
-            config: defconfig+debug
-            output: src
-            rust: rustup-nightly
-            bindgen: cargo
-            container: ghcr.io/featsparks/quickc
-
           # Same, but for LTS 6.18.y.
 
           # `tree: stable-rc/linux-6.18.y, rust: rustup-beta`.
@@ -1543,17 +1494,6 @@ jobs:
             bindgen: cargo-latest
             container: ghcr.io/featsparks/quickc
 
-          # `rust & toolchain: llvmcombined-22-rust-1961-kernel` (7.0 Old Stable).
-          # Requires newer `bindgen` due to the `libclang/bindgen` bug.
-          - tree: stable-rc/linux-7.0.y
-            arch: x86_64
-            toolchain: llvmcombined-22-rust-1961-kernel
-            config: defconfig+debug
-            output: src
-            rust: llvmcombined-22-rust-1961-kernel
-            bindgen: cargo-latest
-            container: ghcr.io/featsparks/quickc
-
           # `rust & toolchain: llvmcombined-22-rust-1961-kernel` (7.1 Stable).
           # Requires newer `bindgen` due to the `libclang/bindgen` bug.
           - tree: stable-rc/linux-7.1.y
@@ -1623,17 +1563,6 @@ jobs:
           # `rust & toolchain: llvmcombined-22latest-rust-1961-kernel` (6.18 LTS).
           # Requires newer `bindgen` due to the `libclang/bindgen` bug.
           - tree: stable-rc/linux-6.18.y
-            arch: x86_64
-            toolchain: llvmcombined-22latest-rust-1961-kernel
-            config: defconfig+debug
-            output: src
-            rust: llvmcombined-22latest-rust-1961-kernel
-            bindgen: cargo-latest
-            container: ghcr.io/featsparks/quickc
-
-          # `rust & toolchain: llvmcombined-22latest-rust-1961-kernel` (7.0 Old Stable).
-          # Requires newer `bindgen` due to the `libclang/bindgen` bug.
-          - tree: stable-rc/linux-7.0.y
             arch: x86_64
             toolchain: llvmcombined-22latest-rust-1961-kernel
             config: defconfig+debug
@@ -2013,13 +1942,6 @@ jobs:
           - tree: stable-rc/linux-7.1.y
             arch: s390
           - tree: stable/linux-7.1.y
-            arch: s390
-
-          - tree: stable-rc/queue/7.0
-            arch: s390
-          - tree: stable-rc/linux-7.0.y
-            arch: s390
-          - tree: stable/linux-7.0.y
             arch: s390
 
           - tree: stable-rc/queue/6.18
