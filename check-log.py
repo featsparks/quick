@@ -141,6 +141,14 @@ PATTERNS = {
 
     # For `kallsyms` (that does not add warning nor error).
     rb"\bKSYM_NAME_LEN\b": [],
+
+    rb"\bdeprecated\b": [
+        # RISC-V kernel log.
+        b"Falling back to deprecated \"riscv,isa\"",
+
+        # Workqueue doctests: https://lore.kernel.org/rust-for-linux/CANiq72mmBmdKsXDZuRvcm2_MfjHKzGphdv8_n1FvoV20va4dPA@mail.gmail.com/
+        b"MyTaskEINtB5_15WorkItemPointerKy0_E3runB17_ enqueued on deprecated workqueue. Use system_{percpu|dfl}_wq instead.",
+    ],
 }
 
 def main():
