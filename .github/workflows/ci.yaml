@@ -928,6 +928,52 @@ jobs:
 
           # ----------------------------------------------------------------------------------
           # ----------------------------------------------------------------------------------
+          # `CONFIG_CC_OPTIMIZE_FOR_SIZE=y`.
+          # ----------------------------------------------------------------------------------
+          # ----------------------------------------------------------------------------------
+
+          # `arch: arm64, config: +optimize-for-size`.
+          - tree: rust-next
+            arch: arm64
+            toolchain: llvm
+            config: defconfig+debug+optimize-for-size
+            output: src
+            rust: rustup
+            bindgen: cargo-latest
+            container: ghcr.io/featsparks/quickc
+
+          # `config: +optimize-for-size`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug+optimize-for-size
+            output: src
+            rust: rustup
+            bindgen: cargo-latest
+            container: ghcr.io/featsparks/quickc
+
+          # `arch: arm64, rust: rustup-stable, config: +optimize-for-size`.
+          - tree: rust-next
+            arch: arm64
+            toolchain: llvm
+            config: defconfig+debug+optimize-for-size
+            output: src
+            rust: rustup-stable
+            bindgen: cargo-latest
+            container: ghcr.io/featsparks/quickc
+
+          # `rust: rustup-stable, config: +optimize-for-size`.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm
+            config: defconfig+debug+optimize-for-size
+            output: src
+            rust: rustup-stable
+            bindgen: cargo-latest
+            container: ghcr.io/featsparks/quickc
+
+          # ----------------------------------------------------------------------------------
+          # ----------------------------------------------------------------------------------
           # `rust-next` inline helpers.
           # ----------------------------------------------------------------------------------
           # ----------------------------------------------------------------------------------
@@ -2781,6 +2827,9 @@ jobs:
 
       - if: matrix.rust != 'disabled' && contains(matrix.config, '+debug')
         run: make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 rfl-debug.config
+
+      - if: matrix.rust != 'disabled' && contains(matrix.config, '+optimize-for-size')
+        run: make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 rfl-optimize-for-size.config
 
       - if: matrix.rust != 'disabled' && contains(matrix.config, '+inline-helpers')
         run: make -C linux ${{ env.MAKE_TOOLS }} ${{ env.MAKE_ARCH }} ${{ env.MAKE_CROSS_COMPILE }} ${{ env.MAKE_TOOLCHAIN }} ${{ env.MAKE_OUTPUT }} ${{ env.MAKE_KRUSTFLAGS }} ${{ env.JOBS }} V=2 rfl-inline-helpers.config
