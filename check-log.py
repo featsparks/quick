@@ -101,6 +101,9 @@ PATTERNS = {
     rb"\bwarning\b": [
         b"message (level 4)",
 
+        # loongarch64
+        b"drivers/gpu/drm/amd/amdgpu/amdgpu_vm.o: warning: objtool: amdgpu_vm_handle_fault+0x",
+
         # `um` (i.e. UML) only -- it would be nice to not allow this one for other architectures.
         b"has a LOAD segment with RWX permissions",
 
