@@ -3147,7 +3147,7 @@ jobs:
       #
       # Linux 6.1 does not have KUnit `rustdoc` tests.
       - if: ${{ matrix.rust != 'disabled' && env.BOOT_TEST == 'true' && matrix.config == 'defconfig+debug' && ! contains(matrix.tree, '6.1.y') }}
-        run: grep '] ok [1-9] rust_doctests_kernel$' qemu-stdout
+        run: grep -E '\] ok [0-9]+ rust_doctests_kernel$' qemu-stdout
 
       # TODO: add `failed` string.
       - if: env.BOOT_TEST == 'true'
