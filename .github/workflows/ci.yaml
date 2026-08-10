@@ -605,14 +605,14 @@ jobs:
           #   bindgen: cargo
           #   container: ghcr.io/featsparks/quickc
 
-          # # `tree: ojeda/rust-next, rust: rustup-stable, config: +inline-helpers`.
+          # # `tree: ojeda/rust-next, arch: arm64, rust: rustup-stable, config: +inline-helpers`.
           # - tree: ojeda/rust-next
           #   arch: arm64
           #   toolchain: llvm-22-kernel # To satisfy `CONFIG_RUSTC_CLANG_LLVM_COMPATIBLE` with Rust stable.
           #   config: defconfig+debug+inline-helpers
           #   output: src
           #   rust: rustup-stable
-          #   bindgen: cargo
+          #   bindgen: cargo-latest # To avoid the "`bindgen` < 0.72.1 && libclang >= 22" issue due to `llvm-22-kernel` above.
           #   container: ghcr.io/featsparks/quickc
 
           # # `tree: ojeda/rust-next, rust: rustup-stable, config: +inline-helpers`.
@@ -622,7 +622,7 @@ jobs:
           #   config: defconfig+debug+inline-helpers
           #   output: src
           #   rust: rustup-stable
-          #   bindgen: cargo
+          #   bindgen: cargo-latest # To avoid the "`bindgen` < 0.72.1 && libclang >= 22" issue due to `llvm-22-kernel` above.
           #   container: ghcr.io/featsparks/quickc
 
           # # `tree: ojeda/rust-next, toolchain: gcc`.
