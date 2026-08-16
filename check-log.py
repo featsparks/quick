@@ -132,6 +132,9 @@ PATTERNS = {
         b"warning: this `if` can be collapsed into the outer `match`",
         b"warnings emitted",
 
+        # Seen in 6.12.y.
+        b"mm/slab.h:572:24: warning: duplicate 'inline' declaration specifier [-Wduplicate-decl-specifier]",
+
     ],
     rb"\bwarnings\b": [
         b" warnings emitted",
@@ -150,7 +153,10 @@ PATTERNS = {
         b"Falling back to deprecated \"riscv,isa\"",
 
         # Workqueue doctests: https://lore.kernel.org/rust-for-linux/CANiq72mmBmdKsXDZuRvcm2_MfjHKzGphdv8_n1FvoV20va4dPA@mail.gmail.com/
-        b"MyTaskEINtB5_15WorkItemPointerKy0_E3runB17_ enqueued on deprecated workqueue. Use system_{percpu|dfl}_wq instead.",
+        #
+        # Also in `_RNvXs8_NtCseUEvc4r6T4f_6kernel9workqueueINtNtNtB7_4sync3arc3ArcNtNtNtNtBH_4lock8spinlock5tests4TestEINtB5_15WorkItemPointerKy0_E3runB7_`.
+        b"_15WorkItemPointerKy0_E3runB17_ enqueued on deprecated workqueue. Use system_{percpu|dfl}_wq instead.",
+        b'_15WorkItemPointerKy0_E3runB7_ enqueued on deprecated workqueue. Use system_{percpu|dfl}_wq instead.',
     ],
 }
 
