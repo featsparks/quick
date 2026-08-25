@@ -85,6 +85,7 @@ jobs:
           # llvm-20-llvm-apt
           # llvm-21-llvm-apt
           # llvm-22-llvm-apt
+          # llvm-23-llvm-apt
 
           # From kernel.org (https://mirrors.edge.kernel.org/pub/tools/llvm/).
           # llvm-15-kernel
@@ -95,6 +96,7 @@ jobs:
           # llvm-20-kernel
           # llvm-21-kernel
           # llvm-22-kernel
+          # llvm-23-kernel
 
           # From kernel.org, LLVM+Rust combined toolchains, matching LLVMs (https://mirrors.edge.kernel.org/pub/tools/llvm/rust/).
           # llvmcombined-14-rust-1620-kernel        (6.1  LTS)
@@ -832,6 +834,17 @@ jobs:
           #   bindgen: cargo-latest
           #   container: ghcr.io/featsparks/quickc
 
+          # # `toolchain: llvm-23-llvm-apt`.
+          # # Requires newer `bindgen` due to the `libclang/bindgen` bug.
+          # - tree: rust-next
+          #   arch: x86_64
+          #   toolchain: llvm-23-llvm-apt
+          #   config: defconfig+debug
+          #   output: src
+          #   rust: rustup
+          #   bindgen: cargo-latest
+          #   container: ghcr.io/featsparks/quickc
+
           # # `toolchain: llvm-15-kernel`.
           # - tree: rust-next
           #   arch: x86_64
@@ -910,6 +923,17 @@ jobs:
           - tree: rust-next
             arch: x86_64
             toolchain: llvm-22-kernel
+            config: defconfig+debug
+            output: src
+            rust: rustup
+            bindgen: cargo-latest
+            container: ghcr.io/featsparks/quickc
+
+          # `toolchain: llvm-23-kernel`.
+          # Requires newer `bindgen` due to the `libclang/bindgen` bug.
+          - tree: rust-next
+            arch: x86_64
+            toolchain: llvm-23-kernel
             config: defconfig+debug
             output: src
             rust: rustup
@@ -2285,6 +2309,8 @@ jobs:
         run: echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=21' >> $GITHUB_ENV
       - if: matrix.toolchain == 'llvm-22-llvm-apt'
         run: echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=22' >> $GITHUB_ENV
+      - if: matrix.toolchain == 'llvm-23-llvm-apt'
+        run: echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=23' >> $GITHUB_ENV
 
       - if: matrix.toolchain == 'llvm-15-kernel'
         run: |
@@ -2318,6 +2344,10 @@ jobs:
         run: |
           echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=22' >> $GITHUB_ENV
           echo 'LLVM_TOOLCHAIN_VERSION=22.1.8' >> $GITHUB_ENV
+      - if: matrix.toolchain == 'llvm-23-kernel'
+        run: |
+          echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=23' >> $GITHUB_ENV
+          echo 'LLVM_TOOLCHAIN_VERSION=23.1.0' >> $GITHUB_ENV
 
       # If we are using LLVM from a LLVM+Rust combined toolchain from kernel.org, we also need a
       # Rust version here (`COMBINED_TOOLCHAIN_RUST_VERSION`) to be able to download the package
