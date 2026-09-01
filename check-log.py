@@ -63,6 +63,7 @@ PATTERNS = {
     rb"\bbug\b": [
         b" and report a bug",
         b"*** may not work due to a bug (https://github.com/rust-lang/rust-bindgen/pull/2824),",
+        b"MP-BIOS bug: 8254 timer not connected to IO-APIC",
 
         b"/bug.h",
         b"/bug.o",
