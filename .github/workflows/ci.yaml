@@ -166,6 +166,8 @@ jobs:
           # rustup-1.96.1
           # rustup-1.97.0
           # rustup-1.97.1
+          # rustup-1.98.0
+          # rustup-1.98.1
           - rustup-stable
           # rustup-beta
           # rustup-nightly
@@ -596,13 +598,13 @@ jobs:
           #   bindgen: cargo
           #   container: ghcr.io/featsparks/quickc
 
-          # # `tree: ojeda/rust-next, rust: rustup-1.98.0`.
+          # # `tree: ojeda/rust-next, rust: rustup-1.98.1`.
           # - tree: ojeda/rust-next
           #   arch: x86_64
           #   toolchain: llvm
           #   config: defconfig+debug
           #   output: src
-          #   rust: rustup-1.98.0
+          #   rust: rustup-1.98.1
           #   bindgen: cargo
           #   container: ghcr.io/featsparks/quickc
 
@@ -1200,13 +1202,13 @@ jobs:
             bindgen: cargo
             container: ghcr.io/featsparks/quickc
 
-          # `rust: rustup-1.98.0`.
+          # `rust: rustup-1.98.1`.
           - tree: rust-next
             arch: x86_64
             toolchain: llvm
             config: defconfig+debug
             output: src
-            rust: rustup-1.98.0
+            rust: rustup-1.98.1
             bindgen: cargo
             container: ghcr.io/featsparks/quickc
 
@@ -1382,13 +1384,13 @@ jobs:
             bindgen: cargo
             container: ghcr.io/featsparks/quickc
 
-          # `tree: torvalds, rust: rustup-1.98.0`.
+          # `tree: torvalds, rust: rustup-1.98.1`.
           - tree: torvalds
             arch: x86_64
             toolchain: llvm
             config: defconfig+debug
             output: src
-            rust: rustup-1.98.0
+            rust: rustup-1.98.1
             bindgen: cargo
             container: ghcr.io/featsparks/quickc
 
