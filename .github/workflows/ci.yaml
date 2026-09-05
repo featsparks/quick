@@ -236,6 +236,7 @@ jobs:
           # ubuntu:25.04 # Non-LTS ("interim") release: plucky. Unsupported.
           # ubuntu:25.10 # Non-LTS ("interim") release: questing.
           # ubuntu:26.04 # LTS release: resolute.
+          # ubuntu:26.10 # Non-LTS ("interim") release: stonking.
 
         include:
           # # `tree: ojeda/rust-next`.
