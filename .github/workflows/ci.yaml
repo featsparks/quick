@@ -138,7 +138,9 @@ jobs:
           # `rustup-stable` tests, instead, the latest stable Rust version released. In other words,
           # the other end of the window of stable releases we support.
           - rustup
-          # rustup-1.78.0
+          # rustup-1.62.0 # v6.1.y LTS (pinned).
+          # rustup-1.73.0 # v6.6.y LTS (pinned).
+          # rustup-1.78.0 # v6.12.y LTS and v6.18.y LTS.
           # rustup-1.79.0
           # rustup-1.80.0
           # rustup-1.80.1
@@ -147,7 +149,7 @@ jobs:
           # rustup-1.83.0
           # rustup-1.84.0
           # rustup-1.84.1
-          # rustup-1.85.0
+          # rustup-1.85.0 # Stable and future LTS one. Debian Trixie's version.
           # rustup-1.85.1
           # rustup-1.86.0
           # rustup-1.87.0
@@ -204,6 +206,26 @@ jobs:
           #
           # `cargo-latest` tests, instead, the latest stable `bindgen` version released.
           - cargo
+          # cargo-0.56.0 # v6.1.y LTS (pinned).
+          # cargo-0.65.1 # v6.6.y LTS (pinned), v6.12.y LTS, v6.18.y LTS.
+          # cargo-0.66.0
+          # cargo-0.66.1
+          # cargo-0.68.0
+          # cargo-0.68.1
+          # cargo-0.69.0
+          # cargo-0.69.1
+          # cargo-0.69.2
+          # cargo-0.69.3
+          # cargo-0.69.4
+          # cargo-0.70.0
+          # cargo-0.70.1
+          # cargo-0.69.5
+          # cargo-0.71.0
+          # cargo-0.71.1 # Stable and future LTS one. Debian Trixie's version.
+          # cargo-0.72.0
+          # cargo-0.72.1
+          # cargo-0.73.0
+          # cargo-0.73.1
           # cargo-latest
 
           # `distro` uses the one from the current distribution, i.e. using
