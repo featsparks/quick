@@ -2372,7 +2372,7 @@ jobs:
       - if: matrix.toolchain == 'llvm-23-kernel'
         run: |
           echo 'LLVM_TOOLCHAIN_VERSION_MAJOR=23' >> $GITHUB_ENV
-          echo 'LLVM_TOOLCHAIN_VERSION=23.1.0' >> $GITHUB_ENV
+          echo 'LLVM_TOOLCHAIN_VERSION=23.1.1' >> $GITHUB_ENV
 
       # If we are using LLVM from a LLVM+Rust combined toolchain from kernel.org, we also need a
       # Rust version here (`COMBINED_TOOLCHAIN_RUST_VERSION`) to be able to download the package
