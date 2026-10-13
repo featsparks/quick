@@ -77,7 +77,6 @@ PATTERNS = {
         b"regulatory.db",
         b".pcie: probe with driver pci-host-generic failed with error -16",
         b"rust/kernel/error.rs",
-        b"Error: Driver 'cpufreq-dt' is already registered, aborting...",
 
         # These come from the KUnit tests that exercises that.
         #
