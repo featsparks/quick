@@ -3255,7 +3255,12 @@ jobs:
       - if: env.BOOT_TEST == 'true'
         shell: bash # TODO: remove (currently for `pipefail`).
         run: |
-          ${{ env.OUTPUT_DIR }}usr/gen_init_cpio ci/qemu-initramfs.desc > rootfs.cpio
+          # `gen_init_cpio` moved from `usr/` to `scripts/` in v7.4 in commit 33bef8226308 ("kbuild: Move gen_init_cpio and gen_initramfs.sh to scripts/").
+          gen_init_cpio=${{ env.OUTPUT_DIR }}scripts/gen_init_cpio
+          if [ ! -x "$gen_init_cpio" ]; then
+            gen_init_cpio=${{ env.OUTPUT_DIR }}usr/gen_init_cpio
+          fi
+          "$gen_init_cpio" ci/qemu-initramfs.desc > rootfs.cpio
 
           set -o pipefail && qemu-system-${{ env.QEMU_ARCH }} \
             ${{ env.QEMU_ARGS }} \
