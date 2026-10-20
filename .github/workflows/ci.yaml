@@ -3320,7 +3320,7 @@ jobs:
 
       # TODO: add `failed` string.
       - if: env.BOOT_TEST == 'true'
-        run: ci/check-log.py qemu-stdout
+        run: ci/check-log.py --arch ${{ matrix.arch }} --tree ${{ matrix.tree }} qemu-stdout
 
       # Re-build with Clippy.
       #
@@ -3446,4 +3446,4 @@ jobs:
           grep '^# # Totals: pass:2 fail:0 xfail:0 xpass:0 skip:0 error:0$' qemu-stdout-debootstrap
           grep '^ok 1 selftests: rust: test_probe_samples.sh$'              qemu-stdout-debootstrap
 
-      - run: ci/check-log.py build-stdout-and-stderr
+      - run: ci/check-log.py --arch ${{ matrix.arch }} --tree ${{ matrix.tree }} build-stdout-and-stderr
