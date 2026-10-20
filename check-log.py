@@ -33,10 +33,10 @@ PATTERNS = {
     b"No such file or directory": [],
     rb"\bpanic\b": [
         # In local use cases I used this kernel command line.
-        #b"oops=panic",
+        #Allowed(b"oops=panic"),
 
-        b"/ledtrig-panic.o",
-        b"/panic.o",
+        Allowed(b"/ledtrig-panic.o"),
+        Allowed(b"/panic.o"),
 
         # `um` 6.12.y: include chains ("In file included from ...") of the
         # `-Wnull-pointer-arithmetic` flood (see the `warning` pattern).
@@ -45,44 +45,44 @@ PATTERNS = {
     rb"\bpanics\b": [],
     rb"\boops\b": [
         # In local use cases I used this kernel command line.
-        #b"oops=panic",
+        #Allowed(b"oops=panic"),
     ],
     rb"\boopses\b": [],
     rb"\btaint\b": [
         # In local use cases I used a tainted kernel.
-        #b"For a more detailed explanation of the various taint flags see",
-        #b"Raw taint value as int/string: ",
+        #Allowed(b"For a more detailed explanation of the various taint flags see"),
+        #Allowed(b"Raw taint value as int/string: "),
     ],
     rb"\btaints\b": [
-        b"rust_out_of_tree: loading out-of-tree module taints kernel.",
+        Allowed(b"rust_out_of_tree: loading out-of-tree module taints kernel."),
     ],
     rb"\bfault\b": [
-        b"/subdev/fault/",
+        Allowed(b"/subdev/fault/"),
 
-        b"/fault-armv.o",
-        b"/fault.o",
+        Allowed(b"/fault-armv.o"),
+        Allowed(b"/fault.o"),
     ],
     rb"\bfaults\b": [],
     rb"\bcorrupted\b": [],
     rb"\btrace\b": [
-        b"] RCU Tasks Trace:",
-        b"] trace event string verifier disabled",
-        b".pcie: probe with driver pci-host-generic failed with error -16",
+        Allowed(b"] RCU Tasks Trace:"),
+        Allowed(b"] trace event string verifier disabled"),
+        Allowed(b".pcie: probe with driver pci-host-generic failed with error -16"),
 
-        b"drivers/gpu/trace/",
-        b"kernel/trace/",
+        Allowed(b"drivers/gpu/trace/"),
+        Allowed(b"kernel/trace/"),
 
-        b"/amd-pstate-trace.o",
-        b"/cdns3-trace.o",
-        b"/cdnsp-trace.o",
-        b"/coresight-trace-id.o",
-        b"/fsl-edma-trace.o",
-        b"/libata-trace.o",
-        b"/mei-trace.o",
-        b"/trace.o",
-        b"/v4l2-trace.o",
-        b"/vb2-trace.o",
-        b"/xhci-trace.o",
+        Allowed(b"/amd-pstate-trace.o"),
+        Allowed(b"/cdns3-trace.o"),
+        Allowed(b"/cdnsp-trace.o"),
+        Allowed(b"/coresight-trace-id.o"),
+        Allowed(b"/fsl-edma-trace.o"),
+        Allowed(b"/libata-trace.o"),
+        Allowed(b"/mei-trace.o"),
+        Allowed(b"/trace.o"),
+        Allowed(b"/v4l2-trace.o"),
+        Allowed(b"/vb2-trace.o"),
+        Allowed(b"/xhci-trace.o"),
 
         # `um` 6.12.y: include chains ("In file included from ...") of the
         # `-Wnull-pointer-arithmetic` flood (see the `warning` pattern). Matched by
@@ -91,28 +91,28 @@ PATTERNS = {
         Allowed(b"fs/iomap/trace.c", arch="um", tree="6.12"),
     ],
     rb"\btraces\b": [
-        b"kernel/trace/",
+        Allowed(b"kernel/trace/"),
 
-        b"/iommu-traces.o",
-        b"/net-traces.o",
+        Allowed(b"/iommu-traces.o"),
+        Allowed(b"/net-traces.o"),
     ],
     rb"\bbug\b": [
-        b" and report a bug",
-        b"*** may not work due to a bug (https://github.com/rust-lang/rust-bindgen/pull/2824),",
-        b"MP-BIOS bug: 8254 timer not connected to IO-APIC",
+        Allowed(b" and report a bug"),
+        Allowed(b"*** may not work due to a bug (https://github.com/rust-lang/rust-bindgen/pull/2824),"),
+        Allowed(b"MP-BIOS bug: 8254 timer not connected to IO-APIC"),
 
-        b"/bug.h",
-        b"/bug.o",
+        Allowed(b"/bug.h"),
+        Allowed(b"/bug.o"),
     ],
     rb"\bbugs\b": [
-        b"/bugs.o",
-        b"/proc-v7-bugs.o",
+        Allowed(b"/bugs.o"),
+        Allowed(b"/proc-v7-bugs.o"),
     ],
     rb"\berror\b": [
-        b"message (level 3)",
-        b"regulatory.db",
-        b".pcie: probe with driver pci-host-generic failed with error -16",
-        b"rust/kernel/error.rs",
+        Allowed(b"message (level 3)"),
+        Allowed(b"regulatory.db"),
+        Allowed(b".pcie: probe with driver pci-host-generic failed with error -16"),
+        Allowed(b"rust/kernel/error.rs"),
 
         # These come from the KUnit tests that exercises that.
         #
@@ -121,21 +121,21 @@ PATTERNS = {
         #
         # I cannot use `\r\n` at the end to make the numbers limited to these two
         # because in the CI I see just `\n`.
-        b"rust_kernel: attempted to create `Error` with out of range `errno`: 0",
-        b"rust_kernel: attempted to create `Error` with out of range `errno`: -1000000",
+        Allowed(b"rust_kernel: attempted to create `Error` with out of range `errno`: 0"),
+        Allowed(b"rust_kernel: attempted to create `Error` with out of range `errno`: -1000000"),
 
-        b"/error.ko",
-        b"/error.mod.o",
-        b"/error.o",
+        Allowed(b"/error.ko"),
+        Allowed(b"/error.mod.o"),
+        Allowed(b"/error.o"),
 
         # Temporarily allowed for stable kernels (pin-init undocumented safety warning).
-        b"inner <- PinInit::<_, error::Error>::pin_chain(Opaque::new(tag_set?), |tag_set| {",
+        Allowed(b"inner <- PinInit::<_, error::Error>::pin_chain(Opaque::new(tag_set?), |tag_set| {"),
     ],
     rb"\berrors\b": [
-        b"/errors.o",
+        Allowed(b"/errors.o"),
     ],
     rb"\bwarning\b": [
-        b"message (level 4)",
+        Allowed(b"message (level 4)"),
 
         # loongarch64
         Allowed(b"drivers/gpu/drm/amd/amdgpu/amdgpu_vm.o: warning: objtool: amdgpu_vm_handle_fault+0x", arch="loongarch64"),
@@ -144,11 +144,11 @@ PATTERNS = {
         Allowed(b"has a LOAD segment with RWX permissions", arch="um"),
 
         # Temporarily allowed for stable kernels (pin-init undocumented safety warning).
-        b"note: this warning originates in the macro `$crate::__init_internal` which comes from the expansion of the macro `pin_init` (in Nightly builds, run with -Z macro-backtrace for more info)",
-        b"note: this warning originates in the macro `$crate::__init_internal` which comes from the expansion of the macro `try_init` (in Nightly builds, run with -Z macro-backtrace for more info)",
-        b"note: this warning originates in the macro `$crate::__init_internal` which comes from the expansion of the macro `try_pin_init` (in Nightly builds, run with -Z macro-backtrace for more info)",
-        b"note: this warning originates in the macro `$crate::__pin_data` which comes from the expansion of the attribute macro `pin_data` (in Nightly builds, run with -Z macro-backtrace for more info)",
-        b"warning: unsafe block missing a safety comment",
+        Allowed(b"note: this warning originates in the macro `$crate::__init_internal` which comes from the expansion of the macro `pin_init` (in Nightly builds, run with -Z macro-backtrace for more info)"),
+        Allowed(b"note: this warning originates in the macro `$crate::__init_internal` which comes from the expansion of the macro `try_init` (in Nightly builds, run with -Z macro-backtrace for more info)"),
+        Allowed(b"note: this warning originates in the macro `$crate::__init_internal` which comes from the expansion of the macro `try_pin_init` (in Nightly builds, run with -Z macro-backtrace for more info)"),
+        Allowed(b"note: this warning originates in the macro `$crate::__pin_data` which comes from the expansion of the attribute macro `pin_data` (in Nightly builds, run with -Z macro-backtrace for more info)"),
+        Allowed(b"warning: unsafe block missing a safety comment"),
 
         # `um` 6.12.y only: many, many `warning: performing pointer arithmetic on a null
         # pointer has undefined behavior [-Wnull-pointer-arithmetic]` on the null `PCI_IOBASE`.
@@ -171,24 +171,24 @@ PATTERNS = {
         Allowed(b": sibling call from callable instruction with modified stack frame", arch="loongarch64", tree="6.12"),
 
         # Temporarily allowed for stable kernels.
-        b" warning generated.",
-        b") in 'do_sys_poll' [-Wframe-larger-than]",
-        b") in 'mas_wr_spanning_store' [-Wframe-larger-than]",
-        b") in 'mas_wr_store_entry' [-Wframe-larger-than]",
+        Allowed(b" warning generated."),
+        Allowed(b") in 'do_sys_poll' [-Wframe-larger-than]"),
+        Allowed(b") in 'mas_wr_spanning_store' [-Wframe-larger-than]"),
+        Allowed(b") in 'mas_wr_store_entry' [-Wframe-larger-than]"),
         # `um` 6.6.y only.
         Allowed(b") in 'mas_wr_modify' [-Wframe-larger-than]", arch="um", tree="6.6"),
-        b"warning emitted",
-        b"warning: manual implementation of `Option::filter`",
-        b"warning: this `if` can be collapsed into the outer `match`",
-        b"warnings emitted",
+        Allowed(b"warning emitted"),
+        Allowed(b"warning: manual implementation of `Option::filter`"),
+        Allowed(b"warning: this `if` can be collapsed into the outer `match`"),
+        Allowed(b"warnings emitted"),
 
         # Seen in 6.12.y.
         Allowed(b"mm/slab.h:572:24: warning: duplicate 'inline' declaration specifier [-Wduplicate-decl-specifier]", tree="6.12"),
 
     ],
     rb"\bwarnings\b": [
-        b" warnings emitted",
-        b" warnings generated.",
+        Allowed(b" warnings emitted"),
+        Allowed(b" warnings generated."),
 
         # `um` 6.12.y: corrupted lines of the `-Wnull-pointer-arithmetic` flood
         # (see the `warning` pattern).
@@ -214,13 +214,13 @@ PATTERNS = {
 
     rb"\bdeprecated\b": [
         # RISC-V kernel log.
-        b"Falling back to deprecated \"riscv,isa\"",
+        Allowed(b"Falling back to deprecated \"riscv,isa\""),
 
         # Workqueue doctests: https://lore.kernel.org/rust-for-linux/CANiq72mmBmdKsXDZuRvcm2_MfjHKzGphdv8_n1FvoV20va4dPA@mail.gmail.com/
         #
         # Also in `_RNvXs8_NtCseUEvc4r6T4f_6kernel9workqueueINtNtNtB7_4sync3arc3ArcNtNtNtNtBH_4lock8spinlock5tests4TestEINtB5_15WorkItemPointerKy0_E3runB7_`.
-        b"_15WorkItemPointerKy0_E3runB17_ enqueued on deprecated workqueue. Use system_{percpu|dfl}_wq instead.",
-        b'_15WorkItemPointerKy0_E3runB7_ enqueued on deprecated workqueue. Use system_{percpu|dfl}_wq instead.',
+        Allowed(b"_15WorkItemPointerKy0_E3runB17_ enqueued on deprecated workqueue. Use system_{percpu|dfl}_wq instead."),
+        Allowed(b'_15WorkItemPointerKy0_E3runB7_ enqueued on deprecated workqueue. Use system_{percpu|dfl}_wq instead.'),
     ],
 }
 
@@ -237,8 +237,6 @@ def main():
             for pattern in PATTERNS:
                 if re.search(pattern, line, re.IGNORECASE):
                     for allowed in PATTERNS[pattern]:
-                        if isinstance(allowed, bytes):
-                            allowed = Allowed(allowed)
                         if allowed.matches(line, args.arch, args.tree):
                             break
                     else:
