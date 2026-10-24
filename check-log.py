@@ -206,10 +206,12 @@ PATTERNS = {
 
     # For `kallsyms` (that does not add warning nor error).
     rb"\bKSYM_NAME_LEN\b": [
-        # `um` 6.12.y `defconfig+debug` only: a handful of Rust doctest symbols are
-        # longer than `KSYM_NAME_LEN` (512) and get skipped by `scripts/kallsyms`
+        # `um` 6.12.y, 6.18.y and 7.2.y `defconfig+debug`: Rust doctest symbols
+        # longer than `KSYM_NAME_LEN` (512) get skipped by `scripts/kallsyms`
         # (nonfatal, i.e. they are just missing from `kallsyms`).
         Allowed(b"Please increase KSYM_NAME_LEN both in kernel and kallsyms.c", arch="um", tree="6.12"),
+        Allowed(b"Please increase KSYM_NAME_LEN both in kernel and kallsyms.c", arch="um", tree="6.18"),
+        Allowed(b"Please increase KSYM_NAME_LEN both in kernel and kallsyms.c", arch="um", tree="7.2"),
     ],
 
     rb"\bdeprecated\b": [
