@@ -1,0 +1,8 @@
+#!/bin/sh
+
+mount -t proc none /proc
+mount -t sysfs none /sys
+
+kselftests/run_kselftest.sh
+
+reboot -f
